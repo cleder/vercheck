@@ -48,20 +48,20 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           python -m pip install -e ".[typing, complexity, linting]"
+          python -m pip install pytest
       - name: Typecheck
         run: |
           mypy src/vercheck tests
       - name: Linting
         run: |
-          flake8 vercheck tests --max-line-length=88
-          black --check vercheck tests
-          ruff check --no-fix vercheck tests
+          flake8 src/vercheck tests --max-line-length=88
+          ruff check --no-fix src/vercheck tests
           yamllint .github/workflows/
       - name: Check complexity
         run: |
-          radon cc --min B vercheck
-          radon mi --min B vercheck
-          lizard -l python -w vercheck
+          radon cc --min B src/vercheck
+          radon mi --min B src/vercheck
+          lizard -l python -w src/vercheck
 
   build-package:
     name: Build & inspect our package.
