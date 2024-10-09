@@ -11,16 +11,17 @@ import argparse
 import re
 import sys
 from pathlib import Path
+from typing import Final
 
-
-pattern = (
+pattern: Final = (
     r"^(?P<version>\d+\.\d+)(?P<extraversion>(?:\.\d+)*)"
     r"(?:(?P<prerel>[abc]|rc)\d+(?:\.\d+)?)?(?P<postdev>(\.post(?P<post>\d+))?"
     r"(\.dev(?P<dev>\d+))?)?$"
 )
+__version__: Final = "0.1.0"
 
 
-def guess_file_name() -> Path:
+def guess_file_name(path: Path) -> Path:
     """Guesses the file name of the PKG-INFO file within an .egg-info directory.
 
     This function searches for directories with the .egg-info extension in the current
@@ -37,51 +38,55 @@ def guess_file_name() -> Path:
 
     """
     """"""
-    egg_info_dirs = list(Path().glob("*.egg-info"))
+    egg_info_dirs = list(path.glob("*.egg-info"))
     if egg_info_dirs:
         return egg_info_dirs[0] / "PKG-INFO"
-    sys.stdout.write("No filename provided and no '*.egg-info' directory found\n")
+    sys.stderr.write("No filename provided and no '*.egg-info' directory found\n")
     sys.exit(1)
 
 
 def get_version_from_pkg_info(file_name: str) -> str:
     """Get the version from the file."""
     file_path = Path(file_name)
-    if not file_name:
-        file_path = guess_file_name()
+    if not file_name or file_path.is_dir():
+        file_path = guess_file_name(file_path)
     try:
         with file_path.open("r") as f:
             for line in f:
                 if line.startswith("Version:"):
                     return line.split(":")[1].strip()
-                if line.startswith("__version__"):
-                    return line.split("=")[1].strip()
     except Exception as e:  # noqa: BLE001
-        sys.stdout.write(f"Error loading file {file_name}: {e}\n")
+        sys.stderr.write(f"Error loading file {file_name}: {e}\n")
         sys.exit(1)
-    sys.stdout.write(f"No Version found in '{file_name}'\n")
+    sys.stderr.write(f"No Version found in '{file_name}'\n")
     sys.exit(1)
 
 
-def main(file_name: str, tag_name: str) -> None:
+def check_versions(version: str, tag_name: str) -> list[str]:
+    """Check if the version in the filename file matches the given version."""
+    errors = []
+    if version != tag_name:
+        errors.append(f"Version {version} does not match tag {tag_name}")
+    if not re.match(pattern, tag_name):
+        errors.append(f"Tag name '{tag_name}' is not PEP-386 compliant")
+    if not re.match(pattern, version):
+        errors.append(f"Version {version} is not PEP-386 compliant")
+    return errors
+
+
+def check(tag_name: str, file_name: str) -> None:
     """Check if the version in the filename file matches the given version."""
     version = get_version_from_pkg_info(file_name)
-    errors = False
-    if version != tag_name:
-        sys.stdout.write(f"Version {version} does not match tag {tag_name}\n")
-        errors = True
-    if not re.match(pattern, tag_name):
-        sys.stdout.write(f"Tag name '{tag_name}' is not PEP-386 compliant\n")
-        errors = True
-    if not re.match(pattern, version):
-        sys.stdout.write(f"Version {version} is not PEP-386 compliant\n")
-        errors = True
+    errors = check_versions(version, tag_name)
     if errors:
+        for error in errors:
+            sys.stderr.write(f"Error: {error}\n")
         sys.exit(1)
     sys.exit(0)
 
 
-if __name__ == "__main__":
+def main() -> None:
+    """Check if the version in the filename file matches the given version."""
     parser = argparse.ArgumentParser(
         description="Check if the version in the metadata matches the given version.",
     )
@@ -95,4 +100,8 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
-    main(args.filename, args.tag_version)
+    check(args.tag_version, args.filename)  # pragma: no cover
+
+
+if __name__ == "__main__":
+    main()
