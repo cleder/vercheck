@@ -50,7 +50,7 @@ jobs:
           python -m pip install -e ".[typing, complexity, linting]"
       - name: Typecheck
         run: |
-          mypy vercheck tests
+          mypy src/vercheck tests
       - name: Linting
         run: |
           flake8 vercheck tests --max-line-length=88
