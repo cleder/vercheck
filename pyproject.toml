@@ -1,3 +1,78 @@
+[build-system]
+build-backend = "setuptools.build_meta"
+requires = [
+    "setuptools>=61.2",
+]
+
+[project]
+authors = [
+    { email = "christian.ledermann@gmail.com", name = "Christian Ledermann" },
+]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Environment :: Console",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Typing :: Typed",
+]
+description = "Vercheck"
+name = "vercheck"
+version = "0.0.0"
+
+[project.license]
+text = "MIT"
+
+[project.optional-dependencies]
+complexity = [
+    "lizard",
+    "radon",
+]
+dev = [
+    "pre-commit",
+    "vercheck[complexity]",
+    "vercheck[linting]",
+    "vercheck[tests]",
+    "vercheck[typing]",
+]
+linting = [
+    "black",
+    "flake8",
+    "flake8-cognitive-complexity",
+    "flake8-comments",
+    "flake8-complex-f-strings",
+    "flake8-continuation",
+    "flake8-docstrings",
+    "flake8-encodings",
+    "flake8-expression-complexity",
+    "flake8-function-order",
+    "flake8-pep3101",
+    "flake8-super",
+    "flake8-use-fstring",
+    "ruff",
+    "yamllint",
+]
+tests = [
+    "pytest",
+    "pytest-cov",
+]
+typing = [
+    "mypy",
+]
+
+[project.readme]
+content-type = "text/markdown"
+file = "README.md"
+
+[project.scripts]
+vercheck = "vercheck.vercheck:app"
+
+[project.urls]
+Homepage = "https://github.com/cleder/vercheck/"
+
 [tool.coverage.paths]
 source = [
     "*/site-packages",
@@ -31,19 +106,3 @@ show_error_codes = true
 show_error_context = true
 strict = true
 warn_unreachable = true
-
-[tool.poetry]
-authors = [
-    "Christian Ledermann <christian.ledermann@gmail.com>",
-]
-classifiers = [
-    "Development Status :: 3 - Alpha",
-]
-description = "Vercheck"
-documentation = "https://vercheck.readthedocs.io"
-homepage = "https://github.com/cleder/vercheck"
-license = "MIT"
-name = "vercheck"
-readme = "README.md"
-repository = "https://github.com/cleder/vercheck"
-version = "0.0.0"

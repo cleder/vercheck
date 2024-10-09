@@ -6,6 +6,7 @@ Usage: check_version_tag.py <filename> <tag_version>
 This script checks if the version in the project metadata matches the given version.
 
 """
+
 import argparse
 import re
 import sys
@@ -81,7 +82,6 @@ def main(file_name: str, tag_name: str) -> None:
 
 
 if __name__ == "__main__":
-
     parser = argparse.ArgumentParser(
         description="Check if the version in the metadata matches the given version.",
     )

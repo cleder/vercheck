@@ -1,18 +1,12 @@
 """Test cases for the __main__ module."""
 
 import pytest
-from click.testing import CliRunner
 
 from vercheck import __main__
 
 
-@pytest.fixture
-def runner() -> CliRunner:
-    """Fixture for invoking command-line interfaces."""
-    return CliRunner()
-
-
-def test_main_succeeds(runner: CliRunner) -> None:
+def test_main_succeeds() -> None:
     """It exits with a status code of zero."""
-    result = runner.invoke(__main__.main)
-    assert result.exit_code == 0
+    with pytest.raises(SystemExit) as excinfo:
+        __main__.main("tests/data/PKG-INFO", "0.1.0")
+    assert excinfo.value.code == 0
