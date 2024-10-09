@@ -20,8 +20,10 @@ classifiers = [
     "Typing :: Typed",
 ]
 description = "Vercheck"
+dynamic = [
+    "version",
+]
 name = "vercheck"
-version = "0.0.0"
 
 [project.license]
 text = "MIT"
@@ -68,7 +70,7 @@ content-type = "text/markdown"
 file = "README.md"
 
 [project.scripts]
-vercheck = "vercheck.vercheck:app"
+vercheck = "vercheck.vercheck:main"
 
 [project.urls]
 Homepage = "https://github.com/cleder/vercheck/"
@@ -84,14 +86,22 @@ tests = [
 ]
 
 [tool.coverage.report]
+exclude_also = [
+    "^\\s*\\.\\.\\.$",
+    "class \\w+\\(Protocol\\)\\:",
+    "except AssertionError:",
+    "except ImportError:",
+    "if TYPE_CHECKING:",
+    "if __name__ == \"__main__\":",
+]
 fail_under = 100
 show_missing = true
 
 [tool.coverage.run]
 branch = true
 source = [
+    "src/vercheck",
     "tests",
-    "vercheck",
 ]
 
 [tool.isort]
@@ -106,3 +116,86 @@ show_error_codes = true
 show_error_context = true
 strict = true
 warn_unreachable = true
+
+[tool.ruff]
+fix = true
+target-version = "py312"
+
+[tool.ruff.lint]
+ignore = [
+    "D203",
+    "D213",
+]
+select = [
+    "A",
+    "AIR",
+    "ANN",
+    "ARG",
+    "ASYNC",
+    "B",
+    "BLE",
+    "C4",
+    "C90",
+    "COM",
+    "CPY",
+    "D",
+    "DJ",
+    "DTZ",
+    "E",
+    "EM",
+    "ERA",
+    "EXE",
+    "F",
+    "FA",
+    "FBT",
+    "FIX",
+    "FLY",
+    "FURB",
+    "G",
+    "I",
+    "ICN",
+    "INP",
+    "INT",
+    "ISC",
+    "LOG",
+    "N",
+    "NPY",
+    "PD",
+    "PERF",
+    "PGH",
+    "PIE",
+    "PL",
+    "PT",
+    "PTH",
+    "PYI",
+    "Q",
+    "RET",
+    "RSE",
+    "RUF",
+    "S",
+    "SIM",
+    "SLF",
+    "SLOT",
+    "T10",
+    "T20",
+    "TCH",
+    "TD",
+    "TID",
+    "TRY",
+    "UP",
+    "W",
+    "YTT",
+]
+
+[tool.ruff.lint.isort]
+force-single-line = true
+
+[tool.ruff.lint.per-file-ignores]
+"tests/*.py" = [
+    "PLR2004",
+    "S101",
+    "SLF001",
+]
+
+[tool.setuptools.dynamic.version]
+attr = "vercheck.vercheck.__version__"
