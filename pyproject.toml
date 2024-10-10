@@ -58,6 +58,7 @@ linting = [
     "yamllint",
 ]
 tests = [
+    "hypothesis",
     "pytest",
     "pytest-cov",
 ]
