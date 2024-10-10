@@ -1,5 +1,33 @@
 # Vercheck
 
+When you use a Python package, you may want to check a package's [version](https://packaging.python.org/en/latest/guides/writing-pyproject-toml/#version).
+To check the Python package/library, a `__version__` attribute is a common practice recommended by [PEP 396](https://peps.python.org/pep-0396/).
+
+```python
+import package_name
+print(package_name.__version__)
+```
+
+Module version numbers _SHOULD_ conform to the normalized version format specified in
+[PEP 440](https://peps.python.org/pep-0440/)
+The canonical public version identifiers __MUST__ comply with the following scheme:
+
+```
+[N!]N(.N)*[{a|b|rc}N][.postN][.devN]
+```
+
+Hard-coding the version of your package in the `pyproject.toml` may not be ideal, as it requires you to update it manually and if you want your package to have access to its own version, you will have to add a global variable with the version to a source package. This means you will have to manually keep those versions in sync.
+
+```toml
+[project]
+name = "mypkg"
+dynamic = "version"
+
+[tool.setuptools.dynamic.version]
+attr = "mypkg.about.__version__"
+```
+
+
 [![PyPI](https://img.shields.io/pypi/v/vercheck.svg)][pypi status]
 [![Status](https://img.shields.io/pypi/status/vercheck.svg)][pypi status]
 [![Python Version](https://img.shields.io/pypi/pyversions/vercheck)][pypi status]
@@ -38,6 +66,10 @@ $ pip install vercheck
 ## Usage
 
 Please see the [Command-line Reference] for details.
+
+## Related
+
+[dynamic-versioning](https://pypi.org/project/dynamic-versioning/)
 
 ## Contributing
 

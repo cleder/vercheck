@@ -10,15 +10,17 @@ This script checks if the version in the project metadata matches the given vers
 import argparse
 import re
 import sys
+from importlib.util import module_from_spec
+from importlib.util import spec_from_file_location
 from pathlib import Path
 from typing import Final
+from typing import cast
 
 pattern: Final = (
     r"^(?P<version>\d+\.\d+)(?P<extraversion>(?:\.\d+)*)"
-    r"(?:(?P<prerel>[abc]|rc)\d+(?:\.\d+)?)?(?P<postdev>(\.post(?P<post>\d+))?"
+    r"(?:(?P<prerel>[ab]|rc)\d+(?:\.\d+)?)?(?P<postdev>(\.post(?P<post>\d+))?"
     r"(\.dev(?P<dev>\d+))?)?$"
 )
-__version__: Final = "0.1.0"
 
 
 def guess_file_name(path: Path) -> Path:
@@ -40,15 +42,39 @@ def guess_file_name(path: Path) -> Path:
     """"""
     egg_info_dirs = list(path.glob("*.egg-info"))
     if egg_info_dirs:
+        sys.stdout.write(f"Found '{egg_info_dirs[0]}'\n")
         return egg_info_dirs[0] / "PKG-INFO"
     sys.stderr.write("No filename provided and no '*.egg-info' directory found\n")
     sys.exit(1)
 
 
-def get_version_from_pkg_info(file_name: str) -> str:
+def get_version_from_module(file_name: Path) -> str:
+    """Get the version from the module."""
+    spec = spec_from_file_location("module.name", file_name)
+    if spec is None:
+        sys.stderr.write(f"Error loading file {file_name}")
+        sys.exit(1)
+    module = module_from_spec(spec)
+    assert spec.loader is not None  # noqa: S101
+    try:
+        spec.loader.exec_module(module)
+    except (FileNotFoundError, ImportError, SyntaxError) as e:
+        sys.stderr.write(f"Error loading file {file_name}: {e}")
+        sys.exit(1)
+    try:
+        version = module.__version__
+        if not isinstance(version, str):
+            sys.stderr.write(f"Version in {file_name} is not a string")
+            sys.exit(1)
+        return cast(str, module.__version__)
+    except AttributeError:
+        sys.stderr.write(f"Module {file_name} has no __version__ attribute")
+        sys.exit(1)
+
+
+def get_version_from_pkg_info(file_path: Path) -> str:
     """Get the version from the file."""
-    file_path = Path(file_name)
-    if not file_name or file_path.is_dir():
+    if file_path.is_dir():
         file_path = guess_file_name(file_path)
     try:
         with file_path.open("r") as f:
@@ -56,10 +82,15 @@ def get_version_from_pkg_info(file_name: str) -> str:
                 if line.startswith("Version:"):
                     return line.split(":")[1].strip()
     except Exception as e:  # noqa: BLE001
-        sys.stderr.write(f"Error loading file {file_name}: {e}\n")
+        sys.stderr.write(f"Error loading file {file_path}: {e}\n")
         sys.exit(1)
-    sys.stderr.write(f"No Version found in '{file_name}'\n")
+    sys.stderr.write(f"No Version found in '{file_path}'\n")
     sys.exit(1)
+
+
+def check_version(version: str) -> bool:
+    """Check if the version is PEP-386 compliant."""
+    return bool(re.match(pattern, version))
 
 
 def check_versions(version: str, tag_name: str) -> list[str]:
@@ -67,16 +98,22 @@ def check_versions(version: str, tag_name: str) -> list[str]:
     errors = []
     if version != tag_name:
         errors.append(f"Version {version} does not match tag {tag_name}")
-    if not re.match(pattern, tag_name):
+    if not check_version(tag_name):
         errors.append(f"Tag name '{tag_name}' is not PEP-386 compliant")
-    if not re.match(pattern, version):
+    if not check_version(version):
         errors.append(f"Version {version} is not PEP-386 compliant")
     return errors
 
 
 def check(tag_name: str, file_name: str) -> None:
     """Check if the version in the filename file matches the given version."""
-    version = get_version_from_pkg_info(file_name)
+    file_path = Path(file_name)
+    if file_name.endswith(".py"):
+        version = get_version_from_module(file_path)
+    else:
+        sys.stdout.write(f"Warning: filename {file_name} does not end with '.py'\n")
+        sys.stdout.write(f"Checking version in {file_name}\n")
+        version = get_version_from_pkg_info(file_path)
     errors = check_versions(version, tag_name)
     if errors:
         for error in errors:

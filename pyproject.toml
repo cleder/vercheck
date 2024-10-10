@@ -110,6 +110,9 @@ lines_after_imports = 2
 profile = "black"
 
 [tool.mypy]
+exclude = [
+    "tests/data",
+]
 pretty = true
 show_column_numbers = true
 show_error_codes = true
@@ -118,6 +121,9 @@ strict = true
 warn_unreachable = true
 
 [tool.ruff]
+exclude = [
+    "tests/data",
+]
 fix = true
 target-version = "py312"
 
@@ -198,4 +204,4 @@ force-single-line = true
 ]
 
 [tool.setuptools.dynamic.version]
-attr = "vercheck.vercheck.__version__"
+attr = "vercheck.about.__version__"
