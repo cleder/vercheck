@@ -23,7 +23,14 @@ description = "Check the package version gainst a target version"
 dynamic = [
     "version",
 ]
+keywords = [
+    "__repr__",
+    "cli",
+    "code generator",
+    "introspection",
+]
 name = "vercheck"
+requires-python = ">=3.9"
 
 [project.license]
 text = "MIT"
@@ -100,6 +107,9 @@ show_missing = true
 
 [tool.coverage.run]
 branch = true
+omit = [
+    "*/tests/data/*",
+]
 source = [
     "src/vercheck",
     "tests",

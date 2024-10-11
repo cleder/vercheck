@@ -112,9 +112,16 @@ def test_check_python_module_with_version() -> None:
     assert excinfo.value.code == 0
 
 
+def test_get_version_from_module_float_version() -> None:
+    """Load a python module and get the version."""
+    with pytest.raises(SystemExit) as excinfo:
+        vercheck.get_version_from_module(TEST_DIR / "data" / "float_version.py")
+    assert excinfo.value.code == 1
+
+
 @pytest.mark.parametrize(
     "version",
-    ["0.1a.0", "0.1.0a.dev0", "0.1.0a2.post", "0.1.0post1", "0.1.0a1.dev.post0"],
+    ["0.1a.0", "0.1.0a.dev0", "0.1.0a2.post", "0.1.0post1", "0.1.0a1.dev2.post0"],
 )
 def test_check_version_fail(version: str) -> None:
     """Test check_version function with invalid versions."""
