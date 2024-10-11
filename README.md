@@ -9,7 +9,7 @@ Check if a version number is PEP-440 compliant and optionally compare it against
 [![License](https://img.shields.io/pypi/l/vercheck)][license]
 
 [![Read the documentation at https://vercheck.readthedocs.io/](https://img.shields.io/readthedocs/vercheck/latest.svg?label=Read%20the%20Docs)][read the docs]
-[![Tests](https://github.com/cleder/vercheck/workflows/Tests/badge.svg)][tests]
+[![Tests](https://github.com/cleder/vercheck/workflows/Tests/badge.svg?branch=main)][tests]
 [![Codecov](https://codecov.io/gh/cleder/vercheck/branch/main/graph/badge.svg)][codecov]
 
 [![pre-commit](https://img.shields.io/badge/pre--commit-enabled-brightgreen?logo=pre-commit&logoColor=white)][pre-commit]
@@ -17,7 +17,7 @@ Check if a version number is PEP-440 compliant and optionally compare it against
 
 [pypi status]: https://pypi.org/project/vercheck/
 [read the docs]: https://vercheck.readthedocs.io/
-[tests]: https://github.com/cleder/vercheck/actions?workflow=Tests&branch=main
+[tests]: https://github.com/cleder/vercheck/actions?workflow=Tests
 [codecov]: https://app.codecov.io/gh/cleder/vercheck
 [pre-commit]: https://github.com/pre-commit/pre-commit
 [black]: https://github.com/psf/black

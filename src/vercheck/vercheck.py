@@ -51,23 +51,23 @@ def get_version_from_module(file_name: Path) -> str:
     """Get the version from the module."""
     spec = spec_from_file_location("module.name", file_name)
     if spec is None:
-        sys.stderr.write(f"Error loading file {file_name}")
+        sys.stderr.write(f"Error loading file '{file_name}'")
         sys.exit(1)
     module = module_from_spec(spec)
     assert spec.loader is not None  # noqa: S101
     try:
         spec.loader.exec_module(module)
     except (FileNotFoundError, ImportError, SyntaxError) as e:
-        sys.stderr.write(f"Error loading file {file_name}: {e}")
+        sys.stderr.write(f"Error loading file '{file_name}': {e}")
         sys.exit(1)
     try:
         version = module.__version__
         if not isinstance(version, str):
-            sys.stderr.write(f"Version in {file_name} is not a string")
+            sys.stderr.write(f"Version in '{file_name}' is not a string")
             sys.exit(1)
         return cast(str, module.__version__)
     except AttributeError:
-        sys.stderr.write(f"Module {file_name} has no __version__ attribute")
+        sys.stderr.write(f"Module '{file_name}' has no __version__ attribute")
         sys.exit(1)
 
 
@@ -79,9 +79,10 @@ def get_version_from_pkg_info(file_path: Path) -> str:
         with file_path.open("r") as f:
             for line in f:
                 if line.startswith("Version:"):
+                    sys.stdout.write(f"Found 'Version:' in '{file_path}'\n")
                     return line.split(":")[1].strip()
     except (FileNotFoundError, IsADirectoryError) as e:
-        sys.stderr.write(f"Error loading file {file_path}: {e}\n")
+        sys.stderr.write(f"Error loading file '{file_path}': {e}\n")
         return ""
     sys.stderr.write(f"No Version found in '{file_path}'\n")
     return ""
@@ -93,7 +94,7 @@ def get_version_from_file(file_name: str) -> str:
     if file_name.endswith(".py"):
         return get_version_from_module(file_path)
     sys.stdout.write(f"Warning: filename {file_name} does not end with '.py'\n")
-    sys.stdout.write(f"Checking version in {file_name or '*.egg-info/PKG-INFO'}\n")
+    sys.stdout.write(f"Checking version in '{file_name or '*.egg-info/PKG-INFO'}'\n")
     return get_version_from_pkg_info(file_path)
 
 
@@ -106,11 +107,11 @@ def check_versions(version: str, tag_name: str) -> list[str]:
     """Check if the version in the filename file matches the given version."""
     errors = []
     if version != tag_name:
-        errors.append(f"Version {version} does not match tag {tag_name}")
+        errors.append(f"Version '{version}' does not match tag '{tag_name}'")
     if not check_version(tag_name):
         errors.append(f"Tag name '{tag_name}' is not PEP-440 compliant")
     if not check_version(version):
-        errors.append(f"Version {version} is not PEP-440 compliant")
+        errors.append(f"Version '{version}' is not PEP-440 compliant")
     return errors
 
 
