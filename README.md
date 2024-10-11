@@ -2,6 +2,28 @@
 
 Check if a version number is PEP-440 compliant and optionally compare it against a version specified in a python file or the PKG-INFO metadata file.
 
+
+[![PyPI](https://img.shields.io/pypi/v/vercheck.svg)][pypi status]
+[![Status](https://img.shields.io/pypi/status/vercheck.svg)][pypi status]
+[![Python Version](https://img.shields.io/pypi/pyversions/vercheck)][pypi status]
+[![License](https://img.shields.io/pypi/l/vercheck)][license]
+
+[![Read the documentation at https://vercheck.readthedocs.io/](https://img.shields.io/readthedocs/vercheck/latest.svg?label=Read%20the%20Docs)][read the docs]
+[![Tests](https://github.com/cleder/vercheck/workflows/Tests/badge.svg)][tests]
+[![Codecov](https://codecov.io/gh/cleder/vercheck/branch/main/graph/badge.svg)][codecov]
+
+[![pre-commit](https://img.shields.io/badge/pre--commit-enabled-brightgreen?logo=pre-commit&logoColor=white)][pre-commit]
+[![Black](https://img.shields.io/badge/code%20style-black-000000.svg)][black]
+
+[pypi status]: https://pypi.org/project/vercheck/
+[read the docs]: https://vercheck.readthedocs.io/
+[tests]: https://github.com/cleder/vercheck/actions?workflow=Tests&branch=main
+[codecov]: https://app.codecov.io/gh/cleder/vercheck
+[pre-commit]: https://github.com/pre-commit/pre-commit
+[black]: https://github.com/psf/black
+
+## Rationale
+
 When you use a Python package, you may want to check a package's [version](https://packaging.python.org/en/latest/guides/writing-pyproject-toml/#version).
 To check the Python package/library, a `__version__` attribute is a common practice recommended by [PEP 396](https://peps.python.org/pep-0396/).
 
@@ -19,6 +41,7 @@ The canonical public version identifiers __MUST__ comply with the following sche
 ```
 
 Hard-coding the version of your package in the `pyproject.toml` may not be ideal, as it requires you to update it manually and if you want your package to have access to its own version, you will have to add a global variable with the version to a source package. This means you will have to manually keep those versions in sync.
+A common approach is using [dynamic metadata](https://packaging.python.org/en/latest/guides/writing-pyproject-toml/#static-vs-dynamic-metadata).
 
 ```toml
 [project]
@@ -29,25 +52,20 @@ dynamic = "version"
 attr = "mypkg.about.__version__"
 ```
 
+When you release a new version of your package, checking the version number is a good practice.
+You can automate this in your CI/CD pipeline, for example, using [GitHub Actions](https://docs.github.com/en/actions).
 
-[![PyPI](https://img.shields.io/pypi/v/vercheck.svg)][pypi status]
-[![Status](https://img.shields.io/pypi/status/vercheck.svg)][pypi status]
-[![Python Version](https://img.shields.io/pypi/pyversions/vercheck)][pypi status]
-[![License](https://img.shields.io/pypi/l/vercheck)][license]
+```yaml
+      - name: Check tag name
+        if: >-
+          github.event_name == 'push' &&
+          startsWith(github.ref, 'refs/tags')
+        run: |
+          pip install vercheck
+          vercheck $GITHUB_REF_NAME src/vercheck/about.py
+```
 
-[![Read the documentation at https://vercheck.readthedocs.io/](https://img.shields.io/readthedocs/vercheck/latest.svg?label=Read%20the%20Docs)][read the docs]
-[![Tests](https://github.com/cleder/vercheck/workflows/Tests/badge.svg)][tests]
-[![Codecov](https://codecov.io/gh/cleder/vercheck/branch/main/graph/badge.svg)][codecov]
-
-[![pre-commit](https://img.shields.io/badge/pre--commit-enabled-brightgreen?logo=pre-commit&logoColor=white)][pre-commit]
-[![Black](https://img.shields.io/badge/code%20style-black-000000.svg)][black]
-
-[pypi status]: https://pypi.org/project/vercheck/
-[read the docs]: https://vercheck.readthedocs.io/
-[tests]: https://github.com/cleder/vercheck/actions?workflow=Tests
-[codecov]: https://app.codecov.io/gh/cleder/vercheck
-[pre-commit]: https://github.com/pre-commit/pre-commit
-[black]: https://github.com/psf/black
+This will check that your tag name is a valid version number and that the version number in the `src/vercheck/about.py` file is the same as the tag name.
 
 ## Requirements
 
@@ -83,6 +101,7 @@ options:
 `vercheck` will exit with a non-zero exit code if the version number is not PEP-440 compliant, the file path does not exist or the version number is not equal to the version number in the file.
 
 Examples:
+
 ```bash
 vercheck 0.2.0 src/vercheck/about.py
 ```
