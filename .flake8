@@ -1,2 +1,2 @@
 [flake8]
-exclude = tests/data
+exclude = tests/data,tests/hypothesis_test.py
