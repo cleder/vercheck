@@ -137,7 +137,7 @@ exclude = [
     "tests/data",
 ]
 fix = true
-target-version = "py312"
+target-version = "py310"
 
 [tool.ruff.lint]
 ignore = [

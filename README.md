@@ -49,13 +49,9 @@ attr = "mypkg.about.__version__"
 [pre-commit]: https://github.com/pre-commit/pre-commit
 [black]: https://github.com/psf/black
 
-## Features
-
-- TODO
-
 ## Requirements
 
-- TODO
+- Python >= 3.10, no dependencies outside of the standard library.
 
 ## Installation
 
@@ -84,9 +80,40 @@ options:
                         Only check if the version number is PEP-440 compliant without trying to retrieve a version from a file.
 ```
 
-## Related
+`vercheck` will exit with a non-zero exit code if the version number is not PEP-440 compliant, the file path does not exist or the version number is not equal to the version number in the file.
 
-[dynamic-versioning](https://pypi.org/project/dynamic-versioning/)
+Examples:
+```bash
+vercheck 0.2.0 src/vercheck/about.py
+```
+
+This will check if the version number is PEP-440 compliant and if the version number is equal to the version number in the `src/vercheck/about.py` file.
+It does not provide any output if the version number is PEP-440 compliant and the version number is equal to the version number in the file. If an error is encountered, it will print the error message and exit with a non-zero exit code.
+
+```bash
+vercheck 0.2.0 --check-version-number-only
+```
+
+This will check if the version number is PEP-440 compliant without trying to retrieve a version from a file.
+
+```bash
+vercheck 0.2.0 src
+```
+
+or
+
+```bash
+vercheck 0.2.0 src/vercheck.egg-info/PKG-INFO
+```
+
+This will check if the version number is PEP-440 compliant and if the version number is equal to the version number in the `src/vercheck.egg-info/PKG-INFO` file.
+The output will be:
+
+```console
+Warning: filename src does not end with '.py'
+Checking version in src
+Found 'src/vercheck.egg-info'
+```
 
 ## Contributing
 
@@ -103,13 +130,11 @@ _Vercheck_ is free and open source software.
 If you encounter any problems,
 please [file an issue] along with a detailed description.
 
-## Credits
+## Related
 
-This project was generated from [@cjolowicz]'s [Hypermodern Python Cookiecutter] template.
+[dynamic-versioning](https://pypi.org/project/dynamic-versioning/)
 
-[@cjolowicz]: https://github.com/cjolowicz
 [pypi]: https://pypi.org/
-[hypermodern python cookiecutter]: https://github.com/cjolowicz/cookiecutter-hypermodern-python
 [file an issue]: https://github.com/cleder/vercheck/issues
 [pip]: https://pip.pypa.io/
 
