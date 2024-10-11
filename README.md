@@ -1,5 +1,7 @@
 # Vercheck
 
+Check if a version number is PEP-440 compliant and optionally compare it against a version specified in a python file or the PKG-INFO metadata file.
+
 When you use a Python package, you may want to check a package's [version](https://packaging.python.org/en/latest/guides/writing-pyproject-toml/#version).
 To check the Python package/library, a `__version__` attribute is a common practice recommended by [PEP 396](https://peps.python.org/pep-0396/).
 
@@ -65,7 +67,22 @@ $ pip install vercheck
 
 ## Usage
 
-Please see the [Command-line Reference] for details.
+to get a quick overview of the available commands and options, you can use the `vercheck -h` command.
+
+```console
+usage: vercheck [-h] [--check-version-number-only] version [filename]
+
+Check if the version is PEP-440 conformant.
+
+positional arguments:
+  version               The version number to compare against.
+  filename              The path to the file containing the version information.
+
+options:
+  -h, --help            show this help message and exit
+  --check-version-number-only
+                        Only check if the version number is PEP-440 compliant without trying to retrieve a version from a file.
+```
 
 ## Related
 
@@ -100,4 +117,3 @@ This project was generated from [@cjolowicz]'s [Hypermodern Python Cookiecutter]
 
 [license]: https://github.com/cleder/vercheck/blob/main/LICENSE
 [contributor guide]: https://github.com/cleder/vercheck/blob/main/CONTRIBUTING.md
-[command-line reference]: https://vercheck.readthedocs.io/en/latest/usage.html

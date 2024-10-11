@@ -1,2 +1,3 @@
 [flake8]
 exclude = tests/data,tests/hypothesis_test.py
+max-line-length = 88

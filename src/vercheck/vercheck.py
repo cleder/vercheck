@@ -1,9 +1,8 @@
 #!/usr/bin/env python3
-"""Check if the version in the about.py file matches the given version.
+"""Check if a version number is PEP-440 compliant.
 
-Usage: check_version_tag.py <filename> <tag_version>
-
-This script checks if the version in the project metadata matches the given version.
+Optionally compare it against a version specified in a python file or the PKG-INFO
+metadata file.
 
 """
 
@@ -45,7 +44,7 @@ def guess_file_name(path: Path) -> Path:
         sys.stdout.write(f"Found '{egg_info_dirs[0]}'\n")
         return egg_info_dirs[0] / "PKG-INFO"
     sys.stderr.write("No filename provided and no '*.egg-info' directory found\n")
-    sys.exit(1)
+    return Path()
 
 
 def get_version_from_module(file_name: Path) -> str:
@@ -81,15 +80,25 @@ def get_version_from_pkg_info(file_path: Path) -> str:
             for line in f:
                 if line.startswith("Version:"):
                     return line.split(":")[1].strip()
-    except Exception as e:  # noqa: BLE001
+    except (FileNotFoundError, IsADirectoryError) as e:
         sys.stderr.write(f"Error loading file {file_path}: {e}\n")
-        sys.exit(1)
+        return ""
     sys.stderr.write(f"No Version found in '{file_path}'\n")
-    sys.exit(1)
+    return ""
+
+
+def get_version_from_file(file_name: str) -> str:
+    """Get the version from the filename file."""
+    file_path = Path(file_name)
+    if file_name.endswith(".py"):
+        return get_version_from_module(file_path)
+    sys.stdout.write(f"Warning: filename {file_name} does not end with '.py'\n")
+    sys.stdout.write(f"Checking version in {file_name or '*.egg-info/PKG-INFO'}\n")
+    return get_version_from_pkg_info(file_path)
 
 
 def check_version(version: str) -> bool:
-    """Check if the version is PEP-386 compliant."""
+    """Check if the version is PEP-440 compliant."""
     return bool(re.match(pattern, version))
 
 
@@ -99,45 +108,69 @@ def check_versions(version: str, tag_name: str) -> list[str]:
     if version != tag_name:
         errors.append(f"Version {version} does not match tag {tag_name}")
     if not check_version(tag_name):
-        errors.append(f"Tag name '{tag_name}' is not PEP-386 compliant")
+        errors.append(f"Tag name '{tag_name}' is not PEP-440 compliant")
     if not check_version(version):
-        errors.append(f"Version {version} is not PEP-386 compliant")
+        errors.append(f"Version {version} is not PEP-440 compliant")
     return errors
 
 
-def check(tag_name: str, file_name: str) -> None:
+def check_version_number_only(version: str) -> int:
+    """Check if the version number is PEP-440 compliant."""
+    if not check_version(version):
+        sys.stderr.write(f"Tag name '{version}' is not PEP-440 compliant\n")
+        return 1
+    sys.stdout.write(f"Tag name '{version}' is PEP-440 compliant\n")
+    return 0
+
+
+def check(tag_name: str, file_name: str, *, check_only: bool) -> int:
     """Check if the version in the filename file matches the given version."""
-    file_path = Path(file_name)
-    if file_name.endswith(".py"):
-        version = get_version_from_module(file_path)
-    else:
-        sys.stdout.write(f"Warning: filename {file_name} does not end with '.py'\n")
-        sys.stdout.write(f"Checking version in {file_name}\n")
-        version = get_version_from_pkg_info(file_path)
+    if check_only:
+        if file_name:
+            sys.stderr.write(
+                "Error: --check-version-number-only "
+                "can only be used without a filename\n",
+            )
+            return 1
+        return check_version_number_only(tag_name)
+    version = get_version_from_file(file_name)
     errors = check_versions(version, tag_name)
     if errors:
         for error in errors:
             sys.stderr.write(f"Error: {error}\n")
-        sys.exit(1)
-    sys.exit(0)
+        return len(errors)
+    return 0
 
 
 def main() -> None:
     """Check if the version in the filename file matches the given version."""
     parser = argparse.ArgumentParser(
-        description="Check if the version in the metadata matches the given version.",
+        description=("Check if the version is PEP-440 conformant."),
     )
-    parser.add_argument("tag_version", help="The version tag to compare against.")
+    parser.add_argument("version", help="The version number to compare against.")
     parser.add_argument(
         "filename",
         nargs="?",
         default="",
         help="The path to the file containing the version information.",
     )
+    parser.add_argument(
+        "--check-version-number-only",
+        action="store_true",
+        help=(
+            "Only check if the version number is PEP-440 compliant "
+            "without trying to retrieve a version from a file."
+        ),
+    )
 
     args = parser.parse_args()
 
-    check(args.tag_version, args.filename)  # pragma: no cover
+    exit_code = check(
+        args.version,
+        args.filename,
+        check_only=args.check_version_number_only,
+    )  # pragma: no cover
+    sys.exit(exit_code)  # pragma: no cover
 
 
 if __name__ == "__main__":

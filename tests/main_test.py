@@ -10,52 +10,74 @@ TEST_DIR = pathlib.Path(__file__).parent
 
 
 def test_check_succeeds() -> None:
-    """It exits with a status code of zero."""
-    with pytest.raises(SystemExit) as excinfo:
-        vercheck.check("0.1.0", str(TEST_DIR / "data"))
-    assert excinfo.value.code == 0
+    """Check returns a status code of zero."""
+    assert vercheck.check("0.1.0", str(TEST_DIR / "data"), check_only=False) == 0
+
+
+def test_check_with_flag_succeeds() -> None:
+    """Check returns a status code of zero."""
+    assert vercheck.check("0.1.0", "", check_only=True) == 0
+
+
+def test_check_with_flag_and_filename_fails() -> None:
+    """Check returns a status code of one."""
+    assert vercheck.check("0.1.0", str(TEST_DIR / "data"), check_only=True) == 1
 
 
 def test_check_file_succeeds() -> None:
     """It exits with a status code of zero."""
-    with pytest.raises(SystemExit) as excinfo:
-        vercheck.check("0.1.0", str(TEST_DIR / "data" / "pkg.egg-info" / "PKG-INFO"))
-    assert excinfo.value.code == 0
+    assert (
+        vercheck.check(
+            "0.1.0",
+            str(TEST_DIR / "data" / "pkg.egg-info" / "PKG-INFO"),
+            check_only=False,
+        )
+        == 0
+    )
 
 
 def test_check_fails_with_wrong_version() -> None:
     """It exits with a status code of one."""
-    with pytest.raises(SystemExit) as excinfo:
-        vercheck.check("0.1.1", str(TEST_DIR / "data"))
-    assert excinfo.value.code == 1
+    assert vercheck.check("0.1.1", str(TEST_DIR / "data"), check_only=False) == 1
 
 
 def test_check_fails_with_wrong_tag_name() -> None:
     """It exits with a status code of one."""
-    with pytest.raises(SystemExit) as excinfo:
-        vercheck.check("0.1.0a", str(TEST_DIR / "data" / "BAD-PKG-INFO"))
-    assert excinfo.value.code == 1
+    assert (
+        vercheck.check(
+            "0.1.0a",
+            str(TEST_DIR / "data" / "BAD-PKG-INFO"),
+            check_only=False,
+        )
+        == 3
+    )
 
 
 def test_check_fails_with_wrong_path() -> None:
     """It exits with a status code of one."""
-    with pytest.raises(SystemExit) as excinfo:
-        vercheck.check("0.1.0", str(TEST_DIR))
-    assert excinfo.value.code == 1
+    assert vercheck.check("0.1.0", str(TEST_DIR), check_only=False) == 2
 
 
 def test_check_fails_when_path_not_exist() -> None:
     """It exits with a status code of one."""
-    with pytest.raises(SystemExit) as excinfo:
-        vercheck.check("0.1.0", str(TEST_DIR / "not_exist"))
-    assert excinfo.value.code == 1
+    assert vercheck.check("0.1.0", str(TEST_DIR / "not_exist"), check_only=False) == 2
 
 
 def test_check_fails_with_no_version() -> None:
     """It exits with a status code of one."""
-    with pytest.raises(SystemExit) as excinfo:
-        vercheck.check("0.1.0", str(TEST_DIR / "data" / "EMPTY-PKG-INFO"))
-    assert excinfo.value.code == 1
+    assert (
+        vercheck.check(
+            "0.1.0",
+            str(TEST_DIR / "data" / "EMPTY-PKG-INFO"),
+            check_only=False,
+        )
+        == 2
+    )
+
+
+def test_check_fails_with_no_filename() -> None:
+    """It exits with a status code of one."""
+    assert vercheck.check("0.1.0", "", check_only=False) == 2
 
 
 def test_args() -> None:
@@ -63,6 +85,13 @@ def test_args() -> None:
     with pytest.raises(SystemExit) as excinfo:
         vercheck.main()
     assert excinfo.value.code == 2
+
+
+def test_get_version_from_pkg_info_empty() -> None:
+    """Get the version from the PKG-INFO file."""
+    assert (
+        vercheck.get_version_from_pkg_info(TEST_DIR / "data" / "EMPTY-PKG-INFO") == ""
+    )
 
 
 def test_module_version() -> None:
@@ -106,10 +135,21 @@ def test_module_version_with_directory() -> None:
 
 
 def test_check_python_module_with_version() -> None:
-    """It exits with a status code of zero."""
-    with pytest.raises(SystemExit) as excinfo:
-        vercheck.check("0.1.0a1", str(TEST_DIR / "data" / "about.py"))
-    assert excinfo.value.code == 0
+    """Load a python module and check the version."""
+    assert (
+        vercheck.check("0.1.0a1", str(TEST_DIR / "data" / "about.py"), check_only=False)
+        == 0
+    )
+
+
+def test_check_version_number_only() -> None:
+    """Check if the version number is PEP-440 compliant."""
+    assert vercheck.check("0.1.0", "", check_only=True) == 0
+
+
+def test_check_version_number_only_fail() -> None:
+    """Check if the version number is PEP-440 compliant."""
+    assert vercheck.check("0.1.0a", "", check_only=True) == 1
 
 
 def test_get_version_from_module_float_version() -> None:
@@ -132,12 +172,13 @@ def test_check_version_fail(version: str) -> None:
     "version",
     [
         "0.1.0",
-        "0.1.0a1",
-        "0.1.0b2",
-        "0.1.0rc1",
-        "0.1.0.post1",
-        "0.1.0.dev1",
-        "0.1.0a1.dev1",
+        "1.1.0a1",
+        "2.1.0b2",
+        "3.1.0rc1",
+        "4.1.0.post1",
+        "5.1.0.dev1",
+        "6.1.0a1.dev1",
+        "7.2.3.post4.dev5",
     ],
 )
 def test_check_version_success(version: str) -> None:

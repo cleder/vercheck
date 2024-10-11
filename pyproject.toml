@@ -21,7 +21,7 @@ classifiers = [
     "Programming Language :: Python :: 3.13",
     "Typing :: Typed",
 ]
-description = "Check the package version gainst a target version"
+description = "Check if a version number is PEP-440 compliant and optionally compare it against a version specified in a python file or the PKG-INFO metadata file."
 dynamic = [
     "version",
 ]
