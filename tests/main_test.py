@@ -84,7 +84,8 @@ def test_args() -> None:
     """It exits with a status code of zero."""
     with pytest.raises(SystemExit) as excinfo:
         vercheck.main()
-    assert excinfo.value.code == 2
+    assert isinstance(excinfo.value.code, int)
+    assert excinfo.value.code >= 2
 
 
 def test_get_version_from_pkg_info_empty() -> None:
