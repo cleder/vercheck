@@ -25,8 +25,7 @@ jobs:
           python-version: ${{ matrix.python-version }}
       - name: Install dependencies
         run: |
-          uv sync --all-extras --dev
-          uv pip install -e ".[tests]"
+          uv sync --extras tests
       - name: Test with pytest
         run: |
           uv run pytest tests --cov=tests --cov=vercheck --cov-report=xml
@@ -50,20 +49,20 @@ jobs:
           python-version-file: "pyproject.toml"
       - name: Install dependencies
         run: |
-          uv pip install -e ".[typing, complexity, linting, tests]"
+          uv sync --all-extras
       - name: Typecheck
         run: |
           uv run mypy src/vercheck tests
       - name: Linting
         run: |
-          flake8 src/vercheck tests --max-line-length=88
-          ruff check --no-fix src/vercheck tests
-          yamllint .github/workflows/
+          uv run flake8 src/vercheck tests --max-line-length=88
+          uv run ruff check --no-fix src/vercheck tests
+          uv run yamllint .github/workflows/
       - name: Check complexity
         run: |
-          radon cc --min B src/vercheck
-          radon mi --min B src/vercheck
-          lizard -l python -w src/vercheck
+          uv run radon cc --min B src/vercheck
+          uv run radon mi --min B src/vercheck
+          uv run lizard -l python -w src/vercheck
 
   build-package:
     name: Build & inspect our package.
@@ -77,17 +76,18 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version-file: "pyproject.toml"
+      - name: Install dependencies
+        run: |
+            uv sync --extras build
       - name: Check with pyroma
         run: |
-            uv pip install pyroma
-            pyroma .
+            uv run pyroma .
       - name: Check tag name
         if: >-
           github.event_name == 'push' &&
           startsWith(github.ref, 'refs/tags')
         run: |
-          uv pip install .
-          vercheck $GITHUB_REF_NAME src/vercheck/about.py
+          uv run vercheck $GITHUB_REF_NAME src/vercheck/about.py
 
   test-publish:
     if: >-
