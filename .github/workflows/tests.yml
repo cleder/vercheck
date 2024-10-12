@@ -9,18 +9,23 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: ['3.10', '3.11', '3.12', '3.13', 3.14-dev]
-
+        python-version:
+            - '3.10'
+            - '3.11'
+            - '3.12'
+            - '3.13'
+            - '3.14-dev'
     steps:
       - uses: actions/checkout@v4
+      - name: Install uv
+        uses: astral-sh/setup-uv@v3
       - name: Set up Python ${{ matrix.python-version }}
         uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
       - name: Install dependencies
         run: |
-          python -m pip install --upgrade pip
-          python -m pip install -e ".[tests]"
+          uv pip install -e ".[tests]"
       - name: Test with pytest
         run: |
           pytest tests --cov=tests --cov=vercheck --cov-report=xml
@@ -34,20 +39,17 @@ jobs:
 
   static-tests:
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        python-version: ['3.12']
-
     steps:
       - uses: actions/checkout@v4
-      - name: Set up Python ${{ matrix.python-version }}
+      - name: Install uv
+        uses: astral-sh/setup-uv@v3
+      - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: ${{ matrix.python-version }}
+          python-version-file: "pyproject.toml"
       - name: Install dependencies
         run: |
-          python -m pip install --upgrade pip
-          python -m pip install -e ".[typing, complexity, linting, tests]"
+          uv pip install -e ".[typing, complexity, linting, tests]"
       - name: Typecheck
         run: |
           mypy src/vercheck tests
@@ -68,20 +70,22 @@ jobs:
     needs: [cpython, static-tests]
     steps:
       - uses: actions/checkout@v4
+      - name: Install uv
+        uses: astral-sh/setup-uv@v3
       - uses: hynek/build-and-inspect-python-package@v2
       - uses: actions/setup-python@v5
         with:
-          python-version: '3.12'
+          python-version-file: "pyproject.toml"
       - name: Check with pyroma
         run: |
-            python -m pip install pyroma
+            uv pip install pyroma
             pyroma .
       - name: Check tag name
         if: >-
           github.event_name == 'push' &&
           startsWith(github.ref, 'refs/tags')
         run: |
-          pip install .
+          uv pip install .
           vercheck $GITHUB_REF_NAME src/vercheck/about.py
 
   test-publish:
