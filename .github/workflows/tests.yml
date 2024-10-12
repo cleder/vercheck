@@ -78,7 +78,7 @@ jobs:
           python-version-file: "pyproject.toml"
       - name: Install dependencies
         run: |
-            uv sync --extras build
+            uv sync --extra build
       - name: Check with pyroma
         run: |
             uv run pyroma .
