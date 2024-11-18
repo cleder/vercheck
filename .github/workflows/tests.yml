@@ -33,7 +33,7 @@ jobs:
           uv run pytest tests --cov=tests --cov=vercheck --cov-report=xml
       - name: "Upload coverage to Codecov"
         if: ${{ matrix.python-version==3.12 }}
-        uses: codecov/codecov-action@v4
+        uses: codecov/codecov-action@v5
         with:
           fail_ci_if_error: true
           verbose: true
