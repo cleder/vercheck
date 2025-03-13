@@ -23,6 +23,9 @@ classifiers = [
     "Topic :: Utilities",
     "Typing :: Typed",
 ]
+dependencies = [
+    "tomli>=2.0.0; python_version < '3.11'",
+]
 description = "Check if a version number is PEP-440 compliant and optionally compare it against a version specified in a python file or the PKG-INFO metadata file."
 dynamic = [
     "version",

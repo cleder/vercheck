@@ -15,6 +15,8 @@ from pathlib import Path
 from typing import Final
 from typing import cast
 
+import tomli
+
 pattern: Final = (
     r"^(?P<version>\d+\.\d+)(?P<extraversion>(?:\.\d+)*)"
     r"(?:(?P<prerel>[ab]|rc)\d+(?:\.\d+)?)?(?P<postdev>(\.post(?P<post>\d+))?"
@@ -88,12 +90,64 @@ def get_version_from_pkg_info(file_path: Path) -> str:
     return ""
 
 
+def get_version_from_pyproject_toml(file_path: Path) -> str:
+    """Get the version from pyproject.toml file.
+
+    Looks for version in [project] section or in [tool.poetry] section.
+
+    Args:
+        file_path: Path to the pyproject.toml file
+
+    Returns:
+        The version string if found, empty string otherwise
+
+    """
+    try:
+        with file_path.open("rb") as f:
+            pyproject_data = tomli.load(f)
+
+        # Try to get version from [project] section (standard)
+        if "project" in pyproject_data and "version" in pyproject_data["project"]:
+            version = pyproject_data["project"]["version"]
+            sys.stdout.write(
+                f"Found version '{version}' in [project] section of '{file_path}'\n",
+            )
+            return cast(str, version)
+
+        # Try to get version from [tool.poetry] section (poetry)
+        if (
+            "tool" in pyproject_data
+            and "poetry" in pyproject_data["tool"]
+            and "version" in pyproject_data["tool"]["poetry"]
+        ):
+            version = pyproject_data["tool"]["poetry"]["version"]
+            sys.stdout.write(
+                f"Found version '{version}' in [tool.poetry] section of '{file_path}'"
+                "\n",
+            )
+            return cast(str, version)
+
+    except (FileNotFoundError, IsADirectoryError, tomli.TOMLDecodeError) as e:
+        sys.stderr.write(f"Error loading file '{file_path}': {e}\n")
+        return ""
+
+    sys.stderr.write(f"No version found in '{file_path}'\n")
+    return ""
+
+
 def get_version_from_file(file_name: str) -> str:
     """Get the version from the filename file."""
     file_path = Path(file_name)
+
     if file_name.endswith(".py"):
         return get_version_from_module(file_path)
-    sys.stdout.write(f"Warning: filename {file_name} does not end with '.py'\n")
+    if file_name.endswith("pyproject.toml"):
+        return get_version_from_pyproject_toml(file_path)
+
+    sys.stdout.write(
+        f"Warning: filename {file_name} does not end with '.py' or is not "
+        "'pyproject.toml'\n",
+    )
     sys.stdout.write(f"Checking version in '{file_name or '*.egg-info/PKG-INFO'}'\n")
     return get_version_from_pkg_info(file_path)
 
