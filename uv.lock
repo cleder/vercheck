@@ -942,7 +942,7 @@ name = "vercheck"
 version = "0.3.0"
 source = { editable = "." }
 dependencies = [
-    { name = "tomli", marker = "python_full_version < '3.11'" },
+    { name = "tomli" },
 ]
 
 [package.optional-dependencies]
@@ -1025,7 +1025,7 @@ requires-dist = [
     { name = "pytest-cov", marker = "extra == 'tests'" },
     { name = "radon", marker = "extra == 'complexity'" },
     { name = "ruff", marker = "extra == 'linting'" },
-    { name = "tomli", marker = "python_full_version < '3.11'", specifier = ">=2.0.0" },
+    { name = "tomli", specifier = ">=2.0.0" },
     { name = "vercheck", extras = ["build"], marker = "extra == 'dev'" },
     { name = "vercheck", extras = ["complexity"], marker = "extra == 'dev'" },
     { name = "vercheck", extras = ["linting"], marker = "extra == 'dev'" },
