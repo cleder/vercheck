@@ -62,7 +62,7 @@ repos:
     hooks:
       - id: mypy
         args: [--strict]
-        additional_dependencies: ["pytest"]
+        additional_dependencies: ["pytest", "nox"]
   - repo: https://github.com/abravalheri/validate-pyproject
     rev: v0.23
     hooks:

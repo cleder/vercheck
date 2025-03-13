@@ -37,49 +37,48 @@ Request features on the [Issue Tracker].
 
 ## How to set up your development environment
 
-You need Python 3.7+ and the following tools:
+You need Python 3.10+ and the following tools:
 
-- [Poetry]
+- [uv]
 - [Nox]
-- [nox-poetry]
 
 Install the package with development requirements:
 
 ```console
-$ poetry install
+uv venv
+uv pip install -e ".[dev]"
 ```
 
 You can now run an interactive Python session,
 or the command-line interface:
 
 ```console
-$ poetry run python
-$ poetry run vercheck
+python
+vercheck
 ```
 
-[poetry]: https://python-poetry.org/
+[uv]: https://github.com/astral-sh/uv
 [nox]: https://nox.thea.codes/
-[nox-poetry]: https://nox-poetry.readthedocs.io/
 
 ## How to test the project
 
 Run the full test suite:
 
 ```console
-$ nox
+nox
 ```
 
 List the available Nox sessions:
 
 ```console
-$ nox --list-sessions
+nox --list-sessions
 ```
 
 You can also run a specific Nox session.
 For example, invoke the unit test suite like this:
 
 ```console
-$ nox --session=tests
+nox --session=tests
 ```
 
 Unit tests are located in the _tests_ directory,
@@ -102,11 +101,35 @@ Feel free to submit early, though—we can always iterate on this.
 To run linting and code formatting checks before committing your change, you can install pre-commit as a Git hook by running the following command:
 
 ```console
-$ nox --session=pre-commit -- install
+nox --session=pre-commit -- install
 ```
 
 It is recommended to open an issue before starting work on anything.
 This will allow a chance to talk it over with the owners and validate your approach.
+
+### Using vercheck in a pre-commit hook
+
+To ensure version numbers are PEP-440 compliant and consistent across your project,
+you can add vercheck to your pre-commit config:
+
+```yaml
+repos:
+-   repo: local
+    hooks:
+    -   id: vercheck
+        name: vercheck
+        entry: vercheck
+        args: ['0.3.0', 'src/vercheck/about.py']  # Use your current version and path
+        language: system
+        pass_filenames: false
+        description: "Check if version number is PEP-440 compliant and matches across files"
+```
+
+After setting up your `.pre-commit-config.yaml` file, install the hooks:
+
+```console
+pre-commit install
+```
 
 [pull request]: https://github.com/cleder/vercheck/pulls
 

@@ -79,7 +79,10 @@ tests = [
     "pytest-cov",
 ]
 typing = [
+    "hypothesis",
     "mypy",
+    "nox",
+    "pytest",
 ]
 
 [project.readme]
@@ -160,6 +163,9 @@ select = [
 force-single-line = true
 
 [tool.ruff.lint.per-file-ignores]
+"noxfile.py" = [
+    "ANN401",
+]
 "tests/*.py" = [
     "PLR2004",
     "S101",
