@@ -65,7 +65,7 @@ def get_version_from_module(file_name: Path) -> str:
         if not isinstance(version, str):
             sys.stderr.write(f"Version in '{file_name}' is not a string")
             sys.exit(1)
-        return cast(str, module.__version__)
+        return cast("str", module.__version__)
     except AttributeError:
         sys.stderr.write(f"Module '{file_name}' has no __version__ attribute")
         sys.exit(1)
