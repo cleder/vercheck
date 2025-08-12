@@ -109,7 +109,7 @@ jobs:
       id-token: write
     steps:
       - name: Download packages built by build-package
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v5
         with:
           name: Packages
           path: dist
@@ -132,7 +132,7 @@ jobs:
       id-token: write
     steps:
       - name: Download packages built by build-package
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v5
         with:
           name: Packages
           path: dist
