@@ -59,17 +59,6 @@ dev = [
 ]
 linting = [
     "flake8",
-    "flake8-cognitive-complexity",
-    "flake8-comments",
-    "flake8-complex-f-strings",
-    "flake8-continuation",
-    "flake8-docstrings",
-    "flake8-encodings",
-    "flake8-expression-complexity",
-    "flake8-function-order",
-    "flake8-pep3101",
-    "flake8-super",
-    "flake8-use-fstring",
     "ruff",
     "yamllint",
 ]
