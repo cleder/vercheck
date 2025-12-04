@@ -107,27 +107,21 @@ def get_version_from_pyproject_toml(file_path: Path) -> str:
             pyproject_data = tomli.load(f)
 
         # Try to get version from [project] section (standard)
-        if "project" in pyproject_data and "version" in pyproject_data["project"]:
-            version = pyproject_data["project"]["version"]
+        if version := pyproject_data.get("project", {}).get("version"):
             sys.stdout.write(
                 f"Found version '{version}' in [project] section of '{file_path}'\n",
             )
-            return cast("str", version)
+            return cast(str, version)
 
         # Try to get version from [tool.poetry] section (poetry)
-        if (
-            "tool" in pyproject_data
-            and "poetry" in pyproject_data["tool"]
-            and "version" in pyproject_data["tool"]["poetry"]
-        ):
-            version = pyproject_data["tool"]["poetry"]["version"]
+        if version := pyproject_data.get("tool", {}).get("poetry", {}).get("version"):
             sys.stdout.write(
                 f"Found version '{version}' in [tool.poetry] section of '{file_path}'"
                 "\n",
             )
-            return cast("str", version)
+            return cast(str, version)
 
-    except (FileNotFoundError, IsADirectoryError, tomli.TOMLDecodeError) as e:
+    except (FileNotFoundError, IsADirectoryError, PermissionError, tomli.TOMLDecodeError) as e:
         sys.stderr.write(f"Error loading file '{file_path}': {e}\n")
         return ""
 
@@ -145,8 +139,8 @@ def get_version_from_file(file_name: str) -> str:
         return get_version_from_pyproject_toml(file_path)
 
     sys.stdout.write(
-        f"Warning: filename {file_name} does not end with '.py' or is not "
-        "'pyproject.toml'\n",
+        f"Warning: unsupported file type '{file_name}'. "
+        "Only '.py' and 'pyproject.toml' files are supported for version extraction.\n",
     )
     sys.stdout.write(f"Checking version in '{file_name or '*.egg-info/PKG-INFO'}'\n")
     return get_version_from_pkg_info(file_path)
