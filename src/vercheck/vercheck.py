@@ -111,7 +111,7 @@ def get_version_from_pyproject_toml(file_path: Path) -> str:
             sys.stdout.write(
                 f"Found version '{version}' in [project] section of '{file_path}'\n",
             )
-            return cast(str, version)
+            return cast("str", version)
 
         # Try to get version from [tool.poetry] section (poetry)
         if version := pyproject_data.get("tool", {}).get("poetry", {}).get("version"):
@@ -119,9 +119,14 @@ def get_version_from_pyproject_toml(file_path: Path) -> str:
                 f"Found version '{version}' in [tool.poetry] section of '{file_path}'"
                 "\n",
             )
-            return cast(str, version)
+            return cast("str", version)
 
-    except (FileNotFoundError, IsADirectoryError, PermissionError, tomli.TOMLDecodeError) as e:
+    except (
+        FileNotFoundError,
+        IsADirectoryError,
+        PermissionError,
+        tomli.TOMLDecodeError,
+    ) as e:
         sys.stderr.write(f"Error loading file '{file_path}': {e}\n")
         return ""
 

@@ -14,7 +14,9 @@ TEST_DIR = pathlib.Path(__file__).parent
 @pytest.fixture
 def standard_pyproject_toml() -> Generator[pathlib.Path, None, None]:
     """Create a temporary pyproject.toml file with standard version."""
-    with tempfile.NamedTemporaryFile(suffix="pyproject.toml", mode="w", encoding="utf-8") as temp_file:
+    with tempfile.NamedTemporaryFile(
+        suffix="pyproject.toml", mode="w", encoding="utf-8"
+    ) as temp_file:
         temp_file.write("""
 [build-system]
 requires = ["setuptools>=42", "wheel"]
