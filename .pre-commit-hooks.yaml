@@ -1,0 +1,21 @@
+- id: vercheck
+  name: vercheck
+  description: >-
+    Check that the version in pyproject.toml/Cargo.toml is PEP-440
+    compliant (auto-detects whichever manifest is present; if both
+    exist, they must agree).
+  entry: vercheck
+  language: python
+  args: [--toml]
+  pass_filenames: false
+  files: ^(pyproject\.toml|Cargo\.toml)$
+- id: vercheck-py
+  name: vercheck (Python module)
+  description: >-
+    Check that a Python module's __version__ attribute is PEP-440
+    compliant. Requires args: [--py=path/to/module.py] -- there is no
+    default module path, so this hook fails until configured.
+  entry: vercheck
+  language: python
+  pass_filenames: false
+  always_run: true

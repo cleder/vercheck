@@ -9,19 +9,20 @@ authors = [
     { email = "christian.ledermann@gmail.com", name = "Christian Ledermann" },
 ]
 classifiers = [
-    "Development Status :: 3 - Alpha",
+    "Development Status :: 4 - Beta",
     "Environment :: Console",
     "Intended Audience :: Developers",
     "License :: OSI Approved :: MIT License",
     "Operating System :: OS Independent",
     "Programming Language :: Python",
-    "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
+    "Topic :: Utilities",
     "Typing :: Typed",
 ]
-description = "Check if a version number is PEP-440 compliant and optionally compare it against a version specified in a python file or the PKG-INFO metadata file."
+description = "Check if a version number is PEP-440 compliant and optionally compare it against a version declared in a TOML manifest or a python file."
 dynamic = [
     "version",
 ]
@@ -31,37 +32,30 @@ keywords = [
     "introspection",
 ]
 name = "vercheck"
-requires-python = ">=3.10"
+requires-python = ">=3.11"
 
 [project.license]
 text = "MIT"
 
 [project.optional-dependencies]
+build = [
+    "pyroma",
+]
 complexity = [
+    "complexipy",
     "lizard",
     "radon",
 ]
 dev = [
     "pre-commit",
+    "vercheck[build]",
     "vercheck[complexity]",
     "vercheck[linting]",
     "vercheck[tests]",
     "vercheck[typing]",
 ]
 linting = [
-    "black",
     "flake8",
-    "flake8-cognitive-complexity",
-    "flake8-comments",
-    "flake8-complex-f-strings",
-    "flake8-continuation",
-    "flake8-docstrings",
-    "flake8-encodings",
-    "flake8-expression-complexity",
-    "flake8-function-order",
-    "flake8-pep3101",
-    "flake8-super",
-    "flake8-use-fstring",
     "ruff",
     "yamllint",
 ]
@@ -82,7 +76,11 @@ file = "README.md"
 vercheck = "vercheck.vercheck:main"
 
 [project.urls]
+Changelog = "https://github.com/cleder/vercheck/releases"
+Documentation = "https://vercheck.readthedocs.io/"
 Homepage = "https://github.com/cleder/vercheck/"
+Issues = "https://github.com/cleder/vercheck/issues"
+Repository = "https://github.com/cleder/vercheck/"
 
 [tool.coverage.paths]
 source = [
@@ -137,7 +135,7 @@ exclude = [
     "tests/data",
 ]
 fix = true
-target-version = "py310"
+target-version = "py311"
 
 [tool.ruff.lint]
 ignore = [
@@ -145,64 +143,7 @@ ignore = [
     "D213",
 ]
 select = [
-    "A",
-    "AIR",
-    "ANN",
-    "ARG",
-    "ASYNC",
-    "B",
-    "BLE",
-    "C4",
-    "C90",
-    "COM",
-    "CPY",
-    "D",
-    "DJ",
-    "DTZ",
-    "E",
-    "EM",
-    "ERA",
-    "EXE",
-    "F",
-    "FA",
-    "FBT",
-    "FIX",
-    "FLY",
-    "FURB",
-    "G",
-    "I",
-    "ICN",
-    "INP",
-    "INT",
-    "ISC",
-    "LOG",
-    "N",
-    "NPY",
-    "PD",
-    "PERF",
-    "PGH",
-    "PIE",
-    "PL",
-    "PT",
-    "PTH",
-    "PYI",
-    "Q",
-    "RET",
-    "RSE",
-    "RUF",
-    "S",
-    "SIM",
-    "SLF",
-    "SLOT",
-    "T10",
-    "T20",
-    "TCH",
-    "TD",
-    "TID",
-    "TRY",
-    "UP",
-    "W",
-    "YTT",
+    "ALL",
 ]
 
 [tool.ruff.lint.isort]

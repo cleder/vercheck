@@ -1,6 +1,6 @@
 # Vercheck
 
-Check if a version number is PEP-440 compliant and optionally compare it against a version specified in a python file or the PKG-INFO metadata file.
+Check if a version number is PEP-440 compliant and optionally compare it against a version declared in a TOML manifest (`pyproject.toml`, `Cargo.toml`, or any other `file:key.path`) or a Python module's `__version__` attribute.
 
 
 [![PyPI](https://img.shields.io/pypi/v/vercheck.svg)][pypi status]
@@ -20,6 +20,7 @@ Check if a version number is PEP-440 compliant and optionally compare it against
 [tests]: https://github.com/cleder/vercheck/actions?workflow=Tests
 [codecov]: https://app.codecov.io/gh/cleder/vercheck
 [pre-commit]: https://github.com/pre-commit/pre-commit
+[prek]: https://github.com/j178/prek
 [black]: https://github.com/psf/black
 
 ## Rationale
@@ -52,6 +53,26 @@ dynamic = "version"
 attr = "mypkg.about.__version__"
 ```
 
+The recommended way to implement that `__version__` attribute is to read it back from your package's own installed metadata, rather than hard-coding a second copy of the version string:
+
+```python
+from importlib.metadata import version
+
+__version__ = version("mypkg")
+```
+
+This way there is exactly one source of truth — whatever your build backend wrote into `pyproject.toml` at build time — and `vercheck 0.2.0 --py=src/mypkg/about.py` still works unchanged, since `--py` only cares that the module exposes a `__version__` string.
+
+If you use [Poetry](https://python-poetry.org/) instead, the version lives at `tool.poetry.version` rather than `project.version`:
+
+```toml
+[tool.poetry]
+name = "mypkg"
+version = "0.2.0"
+```
+
+Check it with `vercheck 0.2.0 --toml=pyproject.toml:tool.poetry.version` — see the [Usage](#usage) examples below.
+
 When you release a new version of your package, checking the version number is a good practice.
 You can automate this in your CI/CD pipeline, for example, using [GitHub Actions](https://docs.github.com/en/actions).
 
@@ -62,14 +83,14 @@ You can automate this in your CI/CD pipeline, for example, using [GitHub Actions
           startsWith(github.ref, 'refs/tags')
         run: |
           pip install vercheck
-          vercheck $GITHUB_REF_NAME src/vercheck/about.py
+          vercheck $GITHUB_REF_NAME --py=src/vercheck/about.py
 ```
 
 This will check that your tag name is a valid version number and that the version number in the `src/vercheck/about.py` file is the same as the tag name.
 
 ## Requirements
 
-- Python >= 3.10, no dependencies outside of the standard library.
+- Python >= 3.11, no dependencies outside of the standard library.
 
 ## Installation
 
@@ -84,55 +105,104 @@ $ pip install vercheck
 to get a quick overview of the available commands and options, you can use the `vercheck -h` command.
 
 ```console
-usage: vercheck [-h] [--check-version-number-only] version [filename]
+usage: vercheck [-h] [--toml [FILE[:KEY.PATH]]] [--py FILE] [version]
 
-Check if the version is PEP-440 conformant.
+Check if a version is PEP-440 compliant.
 
 positional arguments:
-  version               The version number to compare against.
-  filename              The path to the file containing the version information.
+  version               The version number to check. If omitted, only the
+                         resolved --toml/--py source is checked for PEP-440
+                         compliance.
 
 options:
-  -h, --help            show this help message and exit
-  --check-version-number-only
-                        Only check if the version number is PEP-440 compliant without trying to retrieve a version from a file.
+  -h, --help             show this help message and exit
+  --toml [FILE[:KEY.PATH]]
+                         Check the version in a TOML manifest. With no value,
+                         auto-detects 'pyproject.toml'/'Cargo.toml' in the
+                         current directory; if more than one is found, they
+                         must agree. With a value, checks exactly that file
+                         (default key path 'project.version'/'package.version',
+                         or 'file:dotted.key.path' to override). Repeatable.
+  --py FILE              Check the __version__ attribute of a Python module.
 ```
 
-`vercheck` will exit with a non-zero exit code if the version number is not PEP-440 compliant, the file path does not exist or the version number is not equal to the version number in the file.
+> **Order matters:** always put `version` before `--toml`/`--py` — argparse otherwise
+> swallows the next token as the flag's value (e.g. `vercheck --toml 0.1.0` treats
+> `0.1.0` as the TOML spec, not the version to check).
+
+`vercheck` will exit with a non-zero exit code if any resolved version is not PEP-440 compliant, a given file/key path does not exist, or the resolved versions do not all agree.
+
+`--toml` and `--py` are mutually exclusive.
 
 Examples:
 
 ```bash
-vercheck 0.2.0 src/vercheck/about.py
+vercheck 0.2.0
 ```
 
-This will check if the version number is PEP-440 compliant and if the version number is equal to the version number in the `src/vercheck/about.py` file.
-It does not provide any output if the version number is PEP-440 compliant and the version number is equal to the version number in the file. If an error is encountered, it will print the error message and exit with a non-zero exit code.
+Just checks that `0.2.0` is PEP-440 compliant. No comparison, no output on success.
 
 ```bash
-vercheck 0.2.0 --check-version-number-only
+vercheck 0.2.0 --toml
 ```
 
-This will check if the version number is PEP-440 compliant without trying to retrieve a version from a file.
+Checks `0.2.0` against whichever of `pyproject.toml`/`Cargo.toml` are present in the current directory (all of them, if more than one exists — they must agree with each other and with `0.2.0`).
 
 ```bash
-vercheck 0.2.0 src
+vercheck --toml
 ```
 
-or
+Checks that the auto-detected manifest's own version is PEP-440 compliant (and that multiple manifests, if present, agree with each other) — no literal version to compare against.
 
 ```bash
-vercheck 0.2.0 src/vercheck.egg-info/PKG-INFO
+vercheck 0.2.0 --toml=Cargo.toml
 ```
 
-This will check if the version number is PEP-440 compliant and if the version number is equal to the version number in the `src/vercheck.egg-info/PKG-INFO` file.
-The output will be:
+Checks `0.2.0` against exactly `Cargo.toml`'s `package.version`, skipping auto-detection.
 
-```console
-Warning: filename src does not end with '.py'
-Checking version in src
-Found 'src/vercheck.egg-info'
+```bash
+vercheck 0.2.0 --toml=pyproject.toml:tool.poetry.version
 ```
+
+Checks `0.2.0` against a Poetry-style `pyproject.toml`, where the version lives at `tool.poetry.version` instead of the setuptools-style `project.version` default. `--toml` never resolves setuptools `dynamic`/`attr` indirection — for that, point `--py` at the Python module directly.
+
+```bash
+vercheck 0.2.0 --py=src/package/about.py
+```
+
+Checks `0.2.0` against the `__version__` attribute defined in `src/package/about.py`.
+
+## Use as a pre-commit hook
+
+_Vercheck_ ships a `.pre-commit-hooks.yaml` manifest, so it works as a [pre-commit] hook — and, since [prek] reads the same manifest format, as a `prek` hook too, with no extra configuration.
+
+Two hook ids are provided, one per version source `vercheck` supports. Both run in compliance-only mode (no Target version — that comparison stays a CI concern, see [Usage](#usage) above) and both set `pass_filenames: false`, since vercheck's CLI never takes filenames from pre-commit's file list.
+
+### `vercheck` — checks pyproject.toml / Cargo.toml
+
+```yaml
+repos:
+  - repo: https://github.com/cleder/vercheck
+    rev: v0.4.0 # replace with the latest tag
+    hooks:
+      - id: vercheck
+```
+
+Runs `vercheck --toml` whenever `pyproject.toml` or `Cargo.toml` changes, auto-detecting whichever is present and checking its version is PEP-440 compliant (agreeing with the other, if both exist).
+
+### `vercheck-py` — checks a Python module's `__version__`
+
+```yaml
+repos:
+  - repo: https://github.com/cleder/vercheck
+    rev: v0.4.0 # replace with the latest tag
+    hooks:
+      - id: vercheck-py
+        args: [--py=src/mypkg/about.py]
+        files: ^src/mypkg/about\.py$
+```
+
+There's no default module path to guess, so `vercheck-py` fails until you supply `args: [--py=path/to/module.py]`. Add a `files:` override scoped to that path if you only want it to run when that file changes — otherwise it runs on every commit.
 
 ## Contributing
 
