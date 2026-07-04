@@ -76,7 +76,11 @@ file = "README.md"
 vercheck = "vercheck.vercheck:main"
 
 [project.urls]
+Changelog = "https://github.com/cleder/vercheck/releases"
+Documentation = "https://vercheck.readthedocs.io/"
 Homepage = "https://github.com/cleder/vercheck/"
+Issues = "https://github.com/cleder/vercheck/issues"
+Repository = "https://github.com/cleder/vercheck/"
 
 [tool.coverage.paths]
 source = [

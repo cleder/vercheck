@@ -183,7 +183,7 @@ Two hook ids are provided, one per version source `vercheck` supports. Both run 
 ```yaml
 repos:
   - repo: https://github.com/cleder/vercheck
-    rev: v0.3.0 # replace with the latest tag
+    rev: v0.4.0 # replace with the latest tag
     hooks:
       - id: vercheck
 ```
@@ -195,7 +195,7 @@ Runs `vercheck --toml` whenever `pyproject.toml` or `Cargo.toml` changes, auto-d
 ```yaml
 repos:
   - repo: https://github.com/cleder/vercheck
-    rev: v0.3.0 # replace with the latest tag
+    rev: v0.4.0 # replace with the latest tag
     hooks:
       - id: vercheck-py
         args: [--py=src/mypkg/about.py]
