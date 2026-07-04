@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Added a `.pre-commit-hooks.yaml` manifest exposing `vercheck` and
+  `vercheck-py` hooks for use with `pre-commit`/`prek`.
+
 ### Changed
 
 - Replaced the positional `filename` argument with explicit, mutually

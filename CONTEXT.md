@@ -33,3 +33,11 @@ The key path used when no override is given: `project.version` for `pyproject.to
 
 **Mismatch report**:
 The single error produced when the set of resolved versions (Target version, if given, plus every source's version) contains more than one distinct value. Lists each contributing source alongside the version it produced, rather than one error per pairwise disagreement.
+
+## Pre-commit integration
+
+**vercheck hook**:
+The `.pre-commit-hooks.yaml` hook id `vercheck`. Runs Compliance-only mode against the auto-detected `--toml` manifest; never takes a Target version.
+
+**vercheck-py hook**:
+The `.pre-commit-hooks.yaml` hook id `vercheck-py`. Runs Compliance-only mode against a `--py` module the consumer must supply via `args`; fails until configured.
