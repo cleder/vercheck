@@ -20,6 +20,7 @@ Check if a version number is PEP-440 compliant and optionally compare it against
 [tests]: https://github.com/cleder/vercheck/actions?workflow=Tests
 [codecov]: https://app.codecov.io/gh/cleder/vercheck
 [pre-commit]: https://github.com/pre-commit/pre-commit
+[prek]: https://github.com/j178/prek
 [black]: https://github.com/psf/black
 
 ## Rationale
@@ -170,6 +171,38 @@ vercheck 0.2.0 --py=src/package/about.py
 ```
 
 Checks `0.2.0` against the `__version__` attribute defined in `src/package/about.py`.
+
+## Use as a pre-commit hook
+
+_Vercheck_ ships a `.pre-commit-hooks.yaml` manifest, so it works as a [pre-commit] hook — and, since [prek] reads the same manifest format, as a `prek` hook too, with no extra configuration.
+
+Two hook ids are provided, one per version source `vercheck` supports. Both run in compliance-only mode (no Target version — that comparison stays a CI concern, see [Usage](#usage) above) and both set `pass_filenames: false`, since vercheck's CLI never takes filenames from pre-commit's file list.
+
+### `vercheck` — checks pyproject.toml / Cargo.toml
+
+```yaml
+repos:
+  - repo: https://github.com/cleder/vercheck
+    rev: v0.4.0 # replace with the latest tag
+    hooks:
+      - id: vercheck
+```
+
+Runs `vercheck --toml` whenever `pyproject.toml` or `Cargo.toml` changes, auto-detecting whichever is present and checking its version is PEP-440 compliant (agreeing with the other, if both exist).
+
+### `vercheck-py` — checks a Python module's `__version__`
+
+```yaml
+repos:
+  - repo: https://github.com/cleder/vercheck
+    rev: v0.4.0 # replace with the latest tag
+    hooks:
+      - id: vercheck-py
+        args: [--py=src/mypkg/about.py]
+        files: ^src/mypkg/about\.py$
+```
+
+There's no default module path to guess, so `vercheck-py` fails until you supply `args: [--py=path/to/module.py]`. Add a `files:` override scoped to that path if you only want it to run when that file changes — otherwise it runs on every commit.
 
 ## Contributing
 
