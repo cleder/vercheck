@@ -119,6 +119,15 @@ def test_parse_toml_spec_explicit_key_path() -> None:
     assert key_path == ("tool", "poetry", "version")
 
 
+def test_parse_toml_spec_single_segment_key_path() -> None:
+    """A single-segment (undotted) explicit key path is accepted."""
+    file_path, key_path = vercheck.parse_toml_spec(
+        f"{TOML_DIR / 'top_level_version.toml'}:version",
+    )
+    assert file_path == TOML_DIR / "top_level_version.toml"
+    assert key_path == ("version",)
+
+
 def test_parse_toml_spec_unrecognized_name_without_key_path() -> None:
     """A file with no built-in default and no override key path errors."""
     with pytest.raises(SystemExit) as excinfo:
@@ -147,6 +156,13 @@ def test_get_version_from_toml_file_not_found() -> None:
             TOML_DIR / "does-not-exist.toml",
             ("project", "version"),
         )
+    assert excinfo.value.code == 1
+
+
+def test_get_version_from_toml_directory() -> None:
+    """Error (not an unhandled traceback) when the path is a directory."""
+    with pytest.raises(SystemExit) as excinfo:
+        vercheck.get_version_from_toml(TOML_DIR, ("project", "version"))
     assert excinfo.value.code == 1
 
 
@@ -220,6 +236,17 @@ def test_resolve_toml_sources_autodetect_both_match(
     monkeypatch.chdir(TOML_DIR / "autodetect_both_match")
     resolved = vercheck.resolve_toml_sources([vercheck.AUTO_DETECT])
     assert dict(resolved) == {"pyproject.toml": "0.1.0", "Cargo.toml": "0.1.0"}
+
+
+def test_resolve_toml_sources_repeated_bare_toml(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Repeating bare --toml still auto-detects, it is not "combined with explicit"."""
+    monkeypatch.chdir(TOML_DIR / "autodetect_single")
+    resolved = vercheck.resolve_toml_sources(
+        [vercheck.AUTO_DETECT, vercheck.AUTO_DETECT],
+    )
+    assert resolved == [("pyproject.toml", "0.1.0")]
 
 
 def test_resolve_toml_sources_autodetect_combined_with_explicit() -> None:

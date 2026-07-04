@@ -23,7 +23,14 @@ pattern: Final = (
     r"(\.dev(?P<dev>\d+))?)?$"
 )
 
-AUTO_DETECT: Final = "__AUTO_DETECT__"
+
+class _AutoDetect:
+    """Sentinel marking a bare ``--toml`` (auto-detect mode)."""
+
+
+AUTO_DETECT: Final = _AutoDetect()
+
+TomlSpec = str | _AutoDetect
 
 DEFAULT_KEY_PATHS: Final[dict[str, tuple[str, ...]]] = {
     "pyproject.toml": ("project", "version"),
@@ -31,7 +38,7 @@ DEFAULT_KEY_PATHS: Final[dict[str, tuple[str, ...]]] = {
 }
 
 KEY_PATH_RE: Final = re.compile(
-    r"^(?P<file>.+):(?P<key>[A-Za-z0-9_-]+(?:\.[A-Za-z0-9_-]+)+)$",
+    r"^(?P<file>.+):(?P<key>[A-Za-z0-9_-]+(?:\.[A-Za-z0-9_-]+)*)$",
 )
 
 
@@ -43,24 +50,23 @@ def check_version(version: str) -> bool:
 def get_version_from_module(file_name: Path) -> str:
     """Get the version from a Python module's __version__ attribute."""
     spec = spec_from_file_location("module.name", file_name)
-    if spec is None:
-        sys.stderr.write(f"Error loading file '{file_name}'")
+    if spec is None or spec.loader is None:
+        sys.stderr.write(f"Error loading file '{file_name}'\n")
         sys.exit(1)
     module = module_from_spec(spec)
-    assert spec.loader is not None  # noqa: S101
     try:
         spec.loader.exec_module(module)
     except (FileNotFoundError, ImportError, SyntaxError) as e:
-        sys.stderr.write(f"Error loading file '{file_name}': {e}")
+        sys.stderr.write(f"Error loading file '{file_name}': {e}\n")
         sys.exit(1)
     try:
         version = module.__version__
         if not isinstance(version, str):
-            sys.stderr.write(f"Version in '{file_name}' is not a string")
+            sys.stderr.write(f"Version in '{file_name}' is not a string\n")
             sys.exit(1)
         return cast("str", module.__version__)
     except AttributeError:
-        sys.stderr.write(f"Module '{file_name}' has no __version__ attribute")
+        sys.stderr.write(f"Module '{file_name}' has no __version__ attribute\n")
         sys.exit(1)
 
 
@@ -90,8 +96,8 @@ def get_version_from_toml(file_path: Path, key_path: tuple[str, ...]) -> str:
     try:
         with file_path.open("rb") as f:
             data = tomllib.load(f)
-    except FileNotFoundError:
-        sys.stderr.write(f"Error: '{file_path}' does not exist\n")
+    except OSError as e:
+        sys.stderr.write(f"Error: '{file_path}' could not be read: {e}\n")
         sys.exit(1)
     except tomllib.TOMLDecodeError as e:
         sys.stderr.write(f"Error parsing '{file_path}': {e}\n")
@@ -121,10 +127,10 @@ def autodetect_toml_files() -> list[Path]:
     return found
 
 
-def resolve_toml_sources(toml_specs: list[str]) -> list[tuple[str, str]]:
+def resolve_toml_sources(toml_specs: list[TomlSpec]) -> list[tuple[str, str]]:
     """Resolve --toml specs to (label, version) pairs."""
     if AUTO_DETECT in toml_specs:
-        if len(toml_specs) > 1:
+        if any(spec != AUTO_DETECT for spec in toml_specs):
             sys.stderr.write(
                 "Error: --toml cannot be combined with --toml=<file>\n",
             )
@@ -134,7 +140,9 @@ def resolve_toml_sources(toml_specs: list[str]) -> list[tuple[str, str]]:
             for file_path in autodetect_toml_files()
         ]
     else:
-        sources = [parse_toml_spec(spec) for spec in toml_specs]
+        sources = [
+            parse_toml_spec(spec) for spec in toml_specs if isinstance(spec, str)
+        ]
     return [
         (str(file_path), get_version_from_toml(file_path, key_path))
         for file_path, key_path in sources
@@ -156,7 +164,7 @@ def check_versions(resolved: list[tuple[str, str]]) -> list[str]:
 
 def collect_resolved(
     version: str | None,
-    toml_specs: list[str] | None,
+    toml_specs: list[TomlSpec] | None,
     py_path: str | None,
 ) -> list[tuple[str, str]]:
     """Gather the given version and every resolved source's version."""
@@ -172,7 +180,7 @@ def collect_resolved(
 
 def check(
     version: str | None,
-    toml_specs: list[str] | None,
+    toml_specs: list[TomlSpec] | None,
     py_path: str | None,
 ) -> int:
     """Check version compliance and, if a source is given, agreement with it."""
@@ -186,7 +194,7 @@ def check(
     if errors:
         for error in errors:
             sys.stderr.write(f"Error: {error}\n")
-        return len(errors)
+        return min(len(errors), 255)
     return 0
 
 

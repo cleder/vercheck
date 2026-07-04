@@ -125,9 +125,13 @@ options:
   --py FILE              Check the __version__ attribute of a Python module.
 ```
 
+> **Order matters:** always put `version` before `--toml`/`--py` — argparse otherwise
+> swallows the next token as the flag's value (e.g. `vercheck --toml 0.1.0` treats
+> `0.1.0` as the TOML spec, not the version to check).
+
 `vercheck` will exit with a non-zero exit code if any resolved version is not PEP-440 compliant, a given file/key path does not exist, or the resolved versions do not all agree.
 
-`--toml` and `--py` are mutually exclusive. Put `version` before `--toml`/`--py` on the command line — argparse otherwise swallows the next token as the flag's value.
+`--toml` and `--py` are mutually exclusive.
 
 Examples:
 
