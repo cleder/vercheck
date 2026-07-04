@@ -15,3 +15,6 @@ __pycache__/
 *.egg-info/
 *.py[co]
 /build/
+/.complexipy_cache/
+/.vscode/
+/coverage.xml
