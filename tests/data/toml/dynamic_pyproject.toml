@@ -1,0 +1,6 @@
+[project]
+name = "sample"
+dynamic = ["version"]
+
+[tool.setuptools.dynamic.version]
+attr = "sample.about.__version__"
