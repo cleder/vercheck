@@ -1,14 +1,16 @@
 #!/usr/bin/env python3
 """Check if a version number is PEP-440 compliant.
 
-Optionally compare it against a version specified in a python file or the PKG-INFO
-metadata file.
+Optionally compare it against a version declared in a TOML manifest
+(``pyproject.toml``, ``Cargo.toml``, or any other TOML file with an explicit
+key path) or a Python module's ``__version__`` attribute.
 
 """
 
 import argparse
 import re
 import sys
+import tomllib
 from importlib.util import module_from_spec
 from importlib.util import spec_from_file_location
 from pathlib import Path
@@ -21,34 +23,25 @@ pattern: Final = (
     r"(\.dev(?P<dev>\d+))?)?$"
 )
 
+AUTO_DETECT: Final = "__AUTO_DETECT__"
 
-def guess_file_name(path: Path) -> Path:
-    """Guesses the file name of the PKG-INFO file within an .egg-info directory.
+DEFAULT_KEY_PATHS: Final[dict[str, tuple[str, ...]]] = {
+    "pyproject.toml": ("project", "version"),
+    "Cargo.toml": ("package", "version"),
+}
 
-    This function searches for directories with the .egg-info extension in the current
-    directory. If such a directory is found, it returns the path to the PKG-INFO file
-    within that directory.
-    If no .egg-info directory is found, it writes an error message to stdout and
-    exits the program with a status code of 1.
+KEY_PATH_RE: Final = re.compile(
+    r"^(?P<file>.+):(?P<key>[A-Za-z0-9_-]+(?:\.[A-Za-z0-9_-]+)+)$",
+)
 
-    Returns:
-        Path: The path to the PKG-INFO file within the found .egg-info directory.
 
-    Raises:
-        SystemExit: If no .egg-info directory is found.
-
-    """
-    """"""
-    egg_info_dirs = list(path.glob("*.egg-info"))
-    if egg_info_dirs:
-        sys.stdout.write(f"Found '{egg_info_dirs[0]}'\n")
-        return egg_info_dirs[0] / "PKG-INFO"
-    sys.stderr.write("No filename provided and no '*.egg-info' directory found\n")
-    return Path()
+def check_version(version: str) -> bool:
+    """Check if the version is PEP-440 compliant."""
+    return bool(re.match(pattern, version))
 
 
 def get_version_from_module(file_name: Path) -> str:
-    """Get the version from the module."""
+    """Get the version from a Python module's __version__ attribute."""
     spec = spec_from_file_location("module.name", file_name)
     if spec is None:
         sys.stderr.write(f"Error loading file '{file_name}'")
@@ -71,71 +64,125 @@ def get_version_from_module(file_name: Path) -> str:
         sys.exit(1)
 
 
-def get_version_from_pkg_info(file_path: Path) -> str:
-    """Get the version from the file."""
-    if file_path.is_dir():
-        file_path = guess_file_name(file_path)
+def parse_toml_spec(spec: str) -> tuple[Path, tuple[str, ...]]:
+    """Split a ``--toml`` value into a file path and a key path.
+
+    ``file:dotted.key.path`` gives an explicit key path; otherwise the
+    manifest's built-in default key path (keyed by file name) is used.
+    """
+    match = KEY_PATH_RE.match(spec)
+    if match:
+        return Path(match["file"]), tuple(match["key"].split("."))
+    file_path = Path(spec)
+    default = DEFAULT_KEY_PATHS.get(file_path.name)
+    if default is None:
+        sys.stderr.write(
+            f"Error: no default key path known for '{file_path.name}', "
+            f"use '{spec}:dotted.key.path' to specify one\n",
+        )
+        sys.exit(1)
+    return file_path, default
+
+
+def get_version_from_toml(file_path: Path, key_path: tuple[str, ...]) -> str:
+    """Get the version string at key_path within a TOML file."""
+    dotted = ".".join(key_path)
     try:
-        with file_path.open("r") as f:
-            for line in f:
-                if line.startswith("Version:"):
-                    sys.stdout.write(f"Found 'Version:' in '{file_path}'\n")
-                    return line.split(":")[1].strip()
-    except (FileNotFoundError, IsADirectoryError) as e:
-        sys.stderr.write(f"Error loading file '{file_path}': {e}\n")
-        return ""
-    sys.stderr.write(f"No Version found in '{file_path}'\n")
-    return ""
+        with file_path.open("rb") as f:
+            data = tomllib.load(f)
+    except FileNotFoundError:
+        sys.stderr.write(f"Error: '{file_path}' does not exist\n")
+        sys.exit(1)
+    except tomllib.TOMLDecodeError as e:
+        sys.stderr.write(f"Error parsing '{file_path}': {e}\n")
+        sys.exit(1)
+    node: object = data
+    for key in key_path:
+        if not isinstance(node, dict) or key not in node:
+            sys.stderr.write(f"Error: '{dotted}' not found in '{file_path}'\n")
+            sys.exit(1)
+        node = node[key]
+    if not isinstance(node, str):
+        sys.stderr.write(f"Error: '{dotted}' in '{file_path}' is not a string\n")
+        sys.exit(1)
+    return node
 
 
-def get_version_from_file(file_name: str) -> str:
-    """Get the version from the filename file."""
-    file_path = Path(file_name)
-    if file_name.endswith(".py"):
-        return get_version_from_module(file_path)
-    sys.stdout.write(f"Warning: filename {file_name} does not end with '.py'\n")
-    sys.stdout.write(f"Checking version in '{file_name or '*.egg-info/PKG-INFO'}'\n")
-    return get_version_from_pkg_info(file_path)
+def autodetect_toml_files() -> list[Path]:
+    """Find the known manifest files present in the current directory."""
+    found = [Path(name) for name in DEFAULT_KEY_PATHS if Path(name).is_file()]
+    if not found:
+        names = " or ".join(DEFAULT_KEY_PATHS)
+        sys.stderr.write(
+            f"Error: --toml given with no value and no {names} "
+            "found in the current directory\n",
+        )
+        sys.exit(1)
+    return found
 
 
-def check_version(version: str) -> bool:
-    """Check if the version is PEP-440 compliant."""
-    return bool(re.match(pattern, version))
+def resolve_toml_sources(toml_specs: list[str]) -> list[tuple[str, str]]:
+    """Resolve --toml specs to (label, version) pairs."""
+    if AUTO_DETECT in toml_specs:
+        if len(toml_specs) > 1:
+            sys.stderr.write(
+                "Error: --toml cannot be combined with --toml=<file>\n",
+            )
+            sys.exit(1)
+        sources = [
+            (file_path, DEFAULT_KEY_PATHS[file_path.name])
+            for file_path in autodetect_toml_files()
+        ]
+    else:
+        sources = [parse_toml_spec(spec) for spec in toml_specs]
+    return [
+        (str(file_path), get_version_from_toml(file_path, key_path))
+        for file_path, key_path in sources
+    ]
 
 
-def check_versions(version: str, tag_name: str) -> list[str]:
-    """Check if the version in the filename file matches the given version."""
-    errors = []
-    if version != tag_name:
-        errors.append(f"Version '{version}' does not match tag '{tag_name}'")
-    if not check_version(tag_name):
-        errors.append(f"Tag name '{tag_name}' is not PEP-440 compliant")
-    if not check_version(version):
-        errors.append(f"Version '{version}' is not PEP-440 compliant")
+def check_versions(resolved: list[tuple[str, str]]) -> list[str]:
+    """Check every resolved version is PEP-440 compliant and all agree."""
+    errors = [
+        f"'{version}' ({label}) is not PEP-440 compliant"
+        for label, version in resolved
+        if not check_version(version)
+    ]
+    if len({version for _, version in resolved}) > 1:
+        details = ", ".join(f"{label}: {version}" for label, version in resolved)
+        errors.append(f"Versions do not match: {details}")
     return errors
 
 
-def check_version_number_only(version: str) -> int:
-    """Check if the version number is PEP-440 compliant."""
-    if not check_version(version):
-        sys.stderr.write(f"Tag name '{version}' is not PEP-440 compliant\n")
+def collect_resolved(
+    version: str | None,
+    toml_specs: list[str] | None,
+    py_path: str | None,
+) -> list[tuple[str, str]]:
+    """Gather the given version and every resolved source's version."""
+    resolved: list[tuple[str, str]] = []
+    if version is not None:
+        resolved.append(("the given version", version))
+    if toml_specs:
+        resolved.extend(resolve_toml_sources(toml_specs))
+    if py_path:
+        resolved.append((py_path, get_version_from_module(Path(py_path))))
+    return resolved
+
+
+def check(
+    version: str | None,
+    toml_specs: list[str] | None,
+    py_path: str | None,
+) -> int:
+    """Check version compliance and, if a source is given, agreement with it."""
+    if toml_specs and py_path:
+        sys.stderr.write("Error: --toml and --py are mutually exclusive\n")
         return 1
-    sys.stdout.write(f"Tag name '{version}' is PEP-440 compliant\n")
-    return 0
-
-
-def check(tag_name: str, file_name: str, *, check_only: bool) -> int:
-    """Check if the version in the filename file matches the given version."""
-    if check_only:
-        if file_name:
-            sys.stderr.write(
-                "Error: --check-version-number-only "
-                "can only be used without a filename\n",
-            )
-            return 1
-        return check_version_number_only(tag_name)
-    version = get_version_from_file(file_name)
-    errors = check_versions(version, tag_name)
+    if version is None and not toml_specs and not py_path:
+        sys.stderr.write("Error: nothing to check: give a version, --toml, or --py\n")
+        return 1
+    errors = check_versions(collect_resolved(version, toml_specs, py_path))
     if errors:
         for error in errors:
             sys.stderr.write(f"Error: {error}\n")
@@ -144,34 +191,46 @@ def check(tag_name: str, file_name: str, *, check_only: bool) -> int:
 
 
 def main() -> None:
-    """Check if the version in the filename file matches the given version."""
+    """Parse arguments and run the check."""
     parser = argparse.ArgumentParser(
-        description=("Check if the version is PEP-440 conformant."),
+        description="Check if a version is PEP-440 compliant.",
     )
-    parser.add_argument("version", help="The version number to compare against.")
     parser.add_argument(
-        "filename",
+        "version",
         nargs="?",
-        default="",
-        help="The path to the file containing the version information.",
+        default=None,
+        help=(
+            "The version number to check. If omitted, only the resolved "
+            "--toml/--py source is checked for PEP-440 compliance."
+        ),
     )
     parser.add_argument(
-        "--check-version-number-only",
-        action="store_true",
+        "--toml",
+        action="append",
+        nargs="?",
+        const=AUTO_DETECT,
+        default=None,
+        metavar="FILE[:KEY.PATH]",
         help=(
-            "Only check if the version number is PEP-440 compliant "
-            "without trying to retrieve a version from a file."
+            "Check the version in a TOML manifest. With no value, "
+            "auto-detects 'pyproject.toml'/'Cargo.toml' in the current "
+            "directory; if more than one is found, they must agree. "
+            "With a value, checks exactly that file (default key path "
+            "'project.version'/'package.version', or 'file:dotted.key.path' "
+            "to override). Repeatable; put 'version' before --toml to avoid "
+            "argparse swallowing it as --toml's value."
         ),
+    )
+    parser.add_argument(
+        "--py",
+        default=None,
+        metavar="FILE",
+        help="Check the __version__ attribute of a Python module.",
     )
 
     args = parser.parse_args()
 
-    exit_code = check(
-        args.version,
-        args.filename,
-        check_only=args.check_version_number_only,
-    )  # pragma: no cover
-    sys.exit(exit_code)  # pragma: no cover
+    sys.exit(check(args.version, args.toml, args.py))
 
 
 if __name__ == "__main__":

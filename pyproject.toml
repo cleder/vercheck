@@ -15,7 +15,6 @@ classifiers = [
     "License :: OSI Approved :: MIT License",
     "Operating System :: OS Independent",
     "Programming Language :: Python",
-    "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.13",
@@ -23,7 +22,7 @@ classifiers = [
     "Topic :: Utilities",
     "Typing :: Typed",
 ]
-description = "Check if a version number is PEP-440 compliant and optionally compare it against a version specified in a python file or the PKG-INFO metadata file."
+description = "Check if a version number is PEP-440 compliant and optionally compare it against a version declared in a TOML manifest or a python file."
 dynamic = [
     "version",
 ]
@@ -33,7 +32,7 @@ keywords = [
     "introspection",
 ]
 name = "vercheck"
-requires-python = ">=3.10"
+requires-python = ">=3.11"
 
 [project.license]
 text = "MIT"
@@ -132,7 +131,7 @@ exclude = [
     "tests/data",
 ]
 fix = true
-target-version = "py310"
+target-version = "py311"
 
 [tool.ruff.lint]
 ignore = [
