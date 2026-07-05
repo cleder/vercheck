@@ -225,8 +225,9 @@ def main() -> None:
             "directory; if more than one is found, they must agree. "
             "With a value, checks exactly that file (default key path "
             "'project.version'/'package.version', or 'file:dotted.key.path' "
-            "to override). Repeatable; put 'version' before --toml to avoid "
-            "argparse swallowing it as --toml's value."
+            "to override). Repeatable; when multiple TOML sources are given, "
+            "all resolved versions must agree. Put 'version' before --toml "
+            "to avoid argparse swallowing it as --toml's value."
         ),
     )
     parser.add_argument(

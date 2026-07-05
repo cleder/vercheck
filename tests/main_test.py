@@ -267,6 +267,28 @@ def test_resolve_toml_sources_explicit_multiple() -> None:
     }
 
 
+def test_check_multiple_toml_sources_must_agree(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: pathlib.Path,
+) -> None:
+    """Multiple TOML sources are all checked and mismatches fail."""
+    mismatched_file = tmp_path / "mismatch.toml"
+    mismatched_file.write_text("version = '0.2.0'\n", encoding="utf-8")
+
+    monkeypatch.setattr(
+        "sys.argv",
+        [
+            "vercheck",
+            "0.1.0",
+            f"--toml={TOML_DIR / 'pyproject.toml'}",
+            f"--toml={mismatched_file}",
+        ],
+    )
+    with pytest.raises(SystemExit) as excinfo:
+        vercheck.main()
+    assert excinfo.value.code == 1
+
+
 # -- check_versions ----------------------------------------------------------
 
 
