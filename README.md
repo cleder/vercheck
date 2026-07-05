@@ -45,8 +45,12 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: astral-sh/setup-uv@v4
-      - run: uvx vercheck "$GITHUB_REF_NAME" --py=src/mypkg/about.py
+      - uses: astral-sh/setup-uv@
+      - name: Version must match tag name
+        if: >-
+          github.event_name == 'push' &&
+          startsWith(github.ref, 'refs/tags')
+        run: uvx vercheck "$GITHUB_REF_NAME" --py=src/mypkg/about.py
 ```
 
 For TOML-based checks:
