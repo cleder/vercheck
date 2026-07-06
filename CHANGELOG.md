@@ -2,8 +2,7 @@
 
 All notable changes to this project will be documented in this file.
 
-The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
-and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
@@ -20,19 +19,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   value, or reads an explicit `file[:dotted.key.path]` otherwise
   (repeatable; when more than one source resolves, all versions must
   agree). `--py` checks a Python module's `__version__` attribute.
-- `version` is now an optional positional argument. Omitting it checks
-  only the resolved `--toml`/`--py` source's PEP-440 compliance, with
-  no comparison — this replaces the old `--check-version-number-only`
-  flag.
+- `version` is now an optional positional argument.
+  Omitting it checks only the resolved `--toml`/`--py` source's PEP-440 compliance, with no comparison — this replaces the old `--check-version-number-only` flag.
 - Raised the minimum supported Python version to 3.11, to use the
   standard library's `tomllib` for TOML parsing instead of adding a
   runtime dependency.
 
 ### Removed
 
-- Dropped support for reading a version from a `*.egg-info/PKG-INFO`
-  file. Use `--toml` (for `pyproject.toml`/`Cargo.toml`) or `--py` (for
-  a Python module's `__version__`) instead.
+- Dropped support for reading a version from a `*.egg-info/PKG-INFO` file.
+  Use `--toml` (for `pyproject.toml`/`Cargo.toml`) or `--py` (for a Python module's `__version__`) instead.
 - Removed the `--check-version-number-only` flag; omit the `version`
   argument for the same effect.
 

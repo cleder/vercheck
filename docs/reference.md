@@ -2,7 +2,7 @@
 
 ## vercheck
 
-```{eval-rst}
+```text {eval-rst}
 .. automodule:: vercheck
    :members:
 ```
