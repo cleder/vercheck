@@ -8,7 +8,7 @@ end-before: <!-- github-only -->
 [contributor guide]: contributing
 [command-line reference]: usage
 
-```{toctree}
+```text {toctree}
 ---
 hidden:
 maxdepth: 1
