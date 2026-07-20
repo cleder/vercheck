@@ -22,7 +22,7 @@ jobs:
         with:
           enable-cache: true
       - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v6
+        uses: actions/setup-python@v7
         with:
           python-version: ${{ matrix.python-version }}
       - name: Install dependencies
@@ -48,7 +48,7 @@ jobs:
         with:
           enable-cache: true
       - name: Set up Python
-        uses: actions/setup-python@v6
+        uses: actions/setup-python@v7
         with:
           python-version-file: "pyproject.toml"
       - name: Install dependencies
@@ -81,7 +81,7 @@ jobs:
         with:
           enable-cache: true
       - uses: hynek/build-and-inspect-python-package@v2
-      - uses: actions/setup-python@v6
+      - uses: actions/setup-python@v7
         with:
           python-version-file: "pyproject.toml"
       - name: Install dependencies
