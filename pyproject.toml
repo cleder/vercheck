@@ -132,10 +132,10 @@ exclude = [
     "tests/data",
 ]
 fix = true
-target-version = "py311"
 
 [tool.ruff.lint]
 ignore = [
+    "CPY001",
     "D203",
     "D213",
 ]
