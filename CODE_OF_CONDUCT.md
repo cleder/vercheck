@@ -42,8 +42,7 @@ Examples of representing our community include using an official e-mail address,
 
 ## Enforcement
 
-Instances of abusive, harassing, or otherwise unacceptable behavior may be reported to the community leaders responsible for enforcement at
-[christian.ledermann@gmail.com](mailto:christian.ledermann@gmail.com).
+Instances of abusive, harassing, or otherwise unacceptable behavior may be reported to the community leaders responsible for enforcement at [christian.ledermann@gmail.com](mailto:christian.ledermann@gmail.com).
 All complaints will be reviewed and investigated promptly and fairly.
 
 All community leaders are obligated to respect the privacy and security of the reporter of any incident.
@@ -84,15 +83,12 @@ Violating these terms may lead to a permanent ban.
 
 ## Attribution
 
-This Code of Conduct is adapted from the [Contributor Covenant][homepage], version 2.1, available at
-[https://www.contributor-covenant.org/version/2/1/code_of_conduct.html][v2.1].
+This Code of Conduct is adapted from the [Contributor Covenant][homepage], version 2.1, available at [https://www.contributor-covenant.org/version/2/1/code_of_conduct.html][v2.1].
 
-Community Impact Guidelines were inspired by
-[Mozilla's code of conduct enforcement ladder][mozilla coc].
+Community Impact Guidelines were inspired by [Mozilla's code of conduct enforcement ladder][mozilla coc].
 
 For answers to common questions about this code of conduct, see the FAQ at [https://www.contributor-covenant.org/faq][faq].
-Translations are available at
-[https://www.contributor-covenant.org/translations][translations].
+Translations are available at [https://www.contributor-covenant.org/translations][translations].
 
 [homepage]: https://www.contributor-covenant.org
 [v2.1]: https://www.contributor-covenant.org/version/2/1/code_of_conduct.html
