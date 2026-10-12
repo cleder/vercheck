@@ -13,12 +13,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ### Changed
 
-- Replaced the positional `filename` argument with explicit, mutually
-  exclusive `--toml` and `--py` flags. `--toml` auto-detects
-  `pyproject.toml`/`Cargo.toml` in the current directory when given no
-  value, or reads an explicit `file[:dotted.key.path]` otherwise
-  (repeatable; when more than one source resolves, all versions must
-  agree). `--py` checks a Python module's `__version__` attribute.
+- Replaced the positional `filename` argument with explicit, mutually exclusive `--toml` and `--py` flags.
+  `--toml` auto-detects `pyproject.toml`/`Cargo.toml` in the current directory when given no value, or reads an explicit `file[:dotted.key.path]` otherwise (repeatable; when more than one source resolves, all versions must agree).
+  `--py` checks a Python module's `__version__` attribute.
 - `version` is now an optional positional argument.
   Omitting it checks only the resolved `--toml`/`--py` source's PEP-440 compliance, with no comparison — this replaces the old `--check-version-number-only` flag.
 - Raised the minimum supported Python version to 3.11, to use the
