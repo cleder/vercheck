@@ -39,7 +39,7 @@ repos:
     hooks:
       - id: mypy
         args: [--strict]
-        additional_dependencies: ["pytest"]
+        additional_dependencies: ["pytest", "hypothesis"]
         exclude: ^tests/data/
   - repo: https://github.com/abravalheri/validate-pyproject
     rev: v0.27
@@ -54,7 +54,6 @@ repos:
     hooks:
       - id: check-github-workflows
       - id: check-github-actions
-      - id: check-readthedocs
   - repo: https://github.com/regebro/pyroma
     rev: "5.1b1"
     hooks:
