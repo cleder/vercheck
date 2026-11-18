@@ -54,7 +54,6 @@ repos:
     hooks:
       - id: check-github-workflows
       - id: check-github-actions
-      - id: check-readthedocs
   - repo: https://github.com/regebro/pyroma
     rev: "5.1b1"
     hooks:
